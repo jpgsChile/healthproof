@@ -1,0 +1,19 @@
+{
+  "$schema": "https://avax.network/schemas/subnet-config.json",
+  "validatorOnly": false,
+  "consensusParameters": {
+    "k": 25,
+    "alpha": 18,
+    "beta": 20,
+    "concurrentRepolls": 4,
+    "optimalProcessing": 50,
+    "maxOutstandingItems": 1024,
+    "maxItemProcessingTime": 2,
+    "batchSize": 30,
+    "parentSize": 5
+  },
+  "proposerParameters": {
+    "proposerMinBlockDelay": "1s"
+  },
+  "allowedNodes": []
+}
