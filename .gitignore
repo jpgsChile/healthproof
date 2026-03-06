@@ -34,6 +34,10 @@ packages/contracts/coverage/
 packages/contracts/coverage.json
 packages/contracts/typechain-types/
 
+# Infra contracts
+infra/avalanche/contracts/artifacts/
+infra/avalanche/contracts/cache/
+
 # Backend
 apps/backend/storage/
 apps/backend/dist/

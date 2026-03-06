@@ -14,8 +14,10 @@
     "apiUrl": "https://api-testnet.snowtrace.io/api"
   },
   "contracts": {
-    "documentRegistry": null,
-    "issuerRegistry": null
+    "identityRegistry": null,
+    "permissionManager": null,
+    "medicalDocumentRegistry": null,
+    "auditTrail": null
   },
   "deployment": {
     "confirmations": 1,
