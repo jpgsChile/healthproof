@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.20;
 
 interface IMedicalDocumentRegistry {
     function registerDocument(bytes32 documentHash, address issuer, bytes32 metadataHash) external;

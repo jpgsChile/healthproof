@@ -191,7 +191,7 @@ cd infra/avalanche/contracts
 | Comando | Descripción |
 |---------|-------------|
 | `npm run build` | Compila contratos (Hardhat) |
-| `npm run test` | Ejecuta tests |
+| `npm run test` | Ejecuta tests (ver [TEST.md](contracts/TEST.md) para guía) |
 | `npm run clean` | Limpia cache y artifacts |
 | `npm run deploy:healthproof` | Deployment completo (Hardhat) |
 | `npm run deploy:healthproof:fuji` | Deployment en Fuji testnet |

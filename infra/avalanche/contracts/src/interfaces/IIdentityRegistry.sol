@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.20;
 
 interface IIdentityRegistry {
     function isIdentityValid(address identity) external view returns (bool);
