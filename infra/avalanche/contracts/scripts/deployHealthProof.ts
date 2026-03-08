@@ -257,6 +257,27 @@ async function main() {
 
   /*
   --------------------------------------------------
+  Bootstrap: Registrar deployer y Gateway en IdentityRegistry
+  --------------------------------------------------
+  */
+
+  console.log("\nBootstrap: Registrando deployer y Gateway...");
+
+  await identityRegistry.registerEntity(
+    deployer.address,
+    5, // Role.ADMIN
+    "",
+    ethers.ZeroAddress
+  );
+  await identityRegistry.verifyEntity(deployer.address);
+  console.log("  -> Deployer registrado como ADMIN y verificado");
+
+  await identityRegistry.registerEntity(gatewayAddress, 1, "", ethers.ZeroAddress); // DOCTOR
+  await identityRegistry.verifyEntity(gatewayAddress);
+  console.log("  -> Gateway registrado como DOCTOR y verificado");
+
+  /*
+  --------------------------------------------------
   Deployment Summary
   --------------------------------------------------
   */
