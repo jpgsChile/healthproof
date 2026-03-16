@@ -150,8 +150,8 @@ contract MedicalOrderRegistry {
         MedicalOrder storage order = orders[orderId];
 
         require(
-            msg.sender == order.doctor,
-            "Solo el doctor puede asignar laboratorio"
+            msg.sender == order.patient,
+            "Solo el paciente puede asignar laboratorio"
         );
 
         require(

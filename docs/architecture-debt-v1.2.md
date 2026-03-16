@@ -63,8 +63,9 @@
 
 ### 2.2 assignLab, updateStatus, closeEpisode son inaccesibles
 
-**Problema:** Estas funciones verifican `msg.sender == order.doctor` o `msg.sender == episode.openedBy`. Como el doctor es el Gateway, y nadie puede enviar txs "desde" un contrato, estas funciones son **inejecutables**.
+**Problema:** Estas funciones verifican `msg.sender == order.doctor` o `msg.sender == episode.openedBy`. Como el doctor es el Gateway, y nadie puede enviar txs "desde" un contrato, estas funciones son **inejecutables**. 
 
+ <!-- msg.sender == order.patient -->
 **Impacto:**
 - No se puede asignar un laboratorio a una orden
 - No se puede actualizar el estado de una orden (SAMPLE_COLLECTED, RESULT_READY, etc.)
@@ -92,7 +93,7 @@
 - Usar patrón **UUPS Proxy** o **Transparent Proxy** para los registries
 - Mantener el Kernel como router de módulos pero con proxies detrás
 
-### 3.2 IdentityRegistry no tiene transferencia de admin
+### 3.2 IdentityRegistry no tiene transferencia de admin (Danilo)
 
 **Problema:** El admin del `IdentityRegistry` es `msg.sender` del constructor (deployer). No hay función `transferAdmin()` o multisig.
 
