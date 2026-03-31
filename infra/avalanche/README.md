@@ -1,6 +1,6 @@
-# Infraestructura Avalanche — HealthProof
+# Infraestructura Hygieia (Avalanche L1) — HealthProof
 
-Infraestructura blockchain del protocolo **HealthProof** sobre Avalanche C-Chain y Subnet-EVM. Incluye contratos inteligentes modulares, configuración de red y scripts de deployment.
+Infraestructura blockchain del protocolo **HealthProof** sobre **Hygieia** (Avalanche L1). Incluye contratos inteligentes modulares, configuración de red y scripts de deployment.
 
 ---
 
@@ -50,7 +50,7 @@ El protocolo utiliza un **patrón Kernel** modular:
 infra/avalanche/
 ├── README.md                 # Este archivo
 ├── network/                  # Configuración L1 y Subnet
-│   ├── fuji.config.json     # Fuji testnet (chainId 43113)
+│   ├── hygieia.config.json  # Hygieia L1 (chainId 21668)
 │   └── subnet-config.json   # Subnet-EVM (consensus, proposer)
 │
 └── contracts/               # Smart contracts del protocolo
@@ -117,13 +117,12 @@ infra/avalanche/
 
 ## Configuración de red
 
-### `network/fuji.config.json`
+### Red objetivo: Hygieia (L1)
 
-Configuración para **Avalanche Fuji Testnet** (chainId 43113):
-
-- **RPC**: `https://api.avax-test.network/ext/bc/C/rpc`
-- **Explorer**: [testnet.snowtrace.io](https://testnet.snowtrace.io)
-- **RPC alternativos**: PublicNode, Ankr
+- **Network name**: `Hygieia`
+- **RPC**: `http://18.223.252.59:9650/ext/bc/kZYSkYiknAeZJbwtz4M6tN9YmbriGiLQwLKR4Pr7S2UEXQQuW/rpc`
+- **Chain ID**: `21668`
+- **Currency symbol**: `HVE`
 
 ### `network/subnet-config.json`
 
@@ -140,7 +139,7 @@ Configuración para **Subnet-EVM**:
 ### Prerrequisitos
 
 - Node.js 18+
-- Cuenta con AVAX en Fuji (para testnet)
+- Cuenta con saldo en HVE para gas
 - Clave privada del deployer
 
 ### Variables de entorno
@@ -149,7 +148,7 @@ Crea un archivo `.env` en `contracts/`:
 
 ```env
 PRIVATE_KEY=0x...          # Clave privada del deployer (sin 0x opcional)
-AVALANCHE_RPC_URL=https://api.avax-test.network/ext/bc/C/rpc   # Opcional, hay valor por defecto
+HYGIEIA_RPC_URL=http://18.223.252.59:9650/ext/bc/kZYSkYiknAeZJbwtz4M6tN9YmbriGiLQwLKR4Pr7S2UEXQQuW/rpc   # Opcional, hay valor por defecto
 ```
 
 ### Opciones de deployment
@@ -157,9 +156,9 @@ AVALANCHE_RPC_URL=https://api.avax-test.network/ext/bc/C/rpc   # Opcional, hay v
 | Script | Red | Descripción |
 |--------|-----|-------------|
 | `deploy:healthproof` | Hardhat (in-memory) | Deployment local para pruebas |
-| `deploy:healthproof:fuji` | Avalanche Fuji | Deployment en testnet |
+| `deploy:healthproof:hygieia` | Hygieia L1 | Deployment en red objetivo |
 | `deploy:healthproof:local` | localhost:8545 | Nodo Hardhat local |
-| `deploy` / `deploy:fuji` | Legacy | Script `deploy/deploy.ts` |
+| `deploy` / `deploy:hygieia` | Legacy | Script `deploy/deploy.ts` |
 
 ### Orden de deployment (automático)
 
@@ -177,8 +176,8 @@ AVALANCHE_RPC_URL=https://api.avax-test.network/ext/bc/C/rpc   # Opcional, hay v
 
 | Variable | Requerida | Descripción |
 |----------|-----------|-------------|
-| `PRIVATE_KEY` | Sí (Fuji/local) | Clave privada del deployer |
-| `AVALANCHE_RPC_URL` | No | RPC de Avalanche (default: Fuji) |
+| `PRIVATE_KEY` | Sí (Hygieia/local) | Clave privada del deployer |
+| `HYGIEIA_RPC_URL` | No | RPC de Hygieia (default: valor del config) |
 
 ---
 
@@ -194,10 +193,10 @@ cd infra/avalanche/contracts
 | `npm run test` | Ejecuta tests (ver [TEST.md](contracts/TEST.md) para guía) |
 | `npm run clean` | Limpia cache y artifacts |
 | `npm run deploy:healthproof` | Deployment completo (Hardhat) |
-| `npm run deploy:healthproof:fuji` | Deployment en Fuji testnet |
+| `npm run deploy:healthproof:hygieia` | Deployment en Hygieia L1 |
 | `npm run deploy:healthproof:local` | Deployment en localhost |
 | `npm run deploy` | Deployment legacy (Hardhat) |
-| `npm run deploy:fuji` | Deployment legacy (Fuji) |
+| `npm run deploy:hygieia` | Deployment legacy (Hygieia) |
 | `npm run deploy:local` | Deployment legacy (localhost) |
 
 ---
@@ -215,15 +214,15 @@ npm run build
 # 3. Deployment local (Hardhat in-memory)
 npm run deploy:healthproof
 
-# 4. Deployment en Fuji (requiere PRIVATE_KEY y AVAX)
+# 4. Deployment en Hygieia (requiere PRIVATE_KEY y saldo HVE)
 # Crear .env con PRIVATE_KEY=0x...
-npm run deploy:healthproof:fuji
+npm run deploy:healthproof:hygieia
 ```
 
-### Obtener AVAX en Fuji
+### Fondear wallet en Hygieia
 
-1. [Fuji Faucet](https://faucet.avax.network/)
-2. O conectar wallet en [testnet.snowtrace.io](https://testnet.snowtrace.io)
+1. Usa el mecanismo de fondeo definido para tu L1 (bridge/faucet interno/transferencia).
+2. Verifica saldo antes de desplegar.
 
 ---
 
@@ -233,13 +232,11 @@ npm run deploy:healthproof:fuji
 - **Hardhat** ^2.19
 - **ethers.js** v6
 - **TypeScript** ^5.3
-- **Avalanche C-Chain** / Fuji Testnet (chainId 43113)
+- **Hygieia** (Avalanche L1, chainId 21668)
 
 ---
 
 ## Referencias
 
 - [Avalanche Docs](https://docs.avax.network/)
-- [Fuji Testnet](https://docs.avax.network/quickstart/fuji-workflow)
 - [Subnet-EVM](https://docs.avax.network/subnets/evm-chain)
-- [Snowtrace (Explorer)](https://snowtrace.io/)

@@ -8,11 +8,16 @@ async function main() {
   console.log("--------------------------------------------------");
 
   const [deployer] = await ethers.getSigners();
+  if (!deployer) {
+    throw new Error(
+      "No deployer account found. Configure PRIVATE_KEY in .env for the selected network."
+    );
+  }
 
   console.log("Deployer:", deployer.address);
 
   const balance = await deployer.provider.getBalance(deployer.address);
-  console.log("Balance:", ethers.formatEther(balance), "AVAX");
+  console.log("Balance:", ethers.formatEther(balance), "HVE");
 
   console.log("\nStarting deployment...\n");
 

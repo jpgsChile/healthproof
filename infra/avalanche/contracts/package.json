@@ -7,9 +7,9 @@
     "test": "hardhat test",
     "deploy": "hardhat run deploy/deploy.ts",
     "deploy:healthproof": "hardhat run scripts/deployHealthProof.ts",
-    "deploy:healthproof:fuji": "hardhat run scripts/deployHealthProof.ts --network avalanche",
+    "deploy:healthproof:hygieia": "hardhat run scripts/deployHealthProof.ts --network hygieia",
     "deploy:healthproof:local": "hardhat run scripts/deployHealthProof.ts --network localhost",
-    "deploy:fuji": "hardhat run deploy/deploy.ts --network avalanche",
+    "deploy:hygieia": "hardhat run deploy/deploy.ts --network hygieia",
     "deploy:local": "hardhat run deploy/deploy.ts --network localhost",
     "clean": "hardhat clean"
   },

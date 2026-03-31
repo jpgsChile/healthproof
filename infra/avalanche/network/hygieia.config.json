@@ -1,0 +1,15 @@
+{
+  "$schema": "https://avax.network/schemas/subnet-config.json",
+  "network": "hygieia",
+  "chainId": 21668,
+  "rpc": {
+    "url": "http://18.223.252.59:9650/ext/bc/kZYSkYiknAeZJbwtz4M6tN9YmbriGiLQwLKR4Pr7S2UEXQQuW/rpc"
+  },
+  "currency": {
+    "symbol": "HVE"
+  },
+  "deployment": {
+    "confirmations": 1,
+    "timeout": 120000
+  }
+}
