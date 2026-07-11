@@ -123,3 +123,38 @@ CREATE TABLE public.permission_invitations (
   CONSTRAINT permission_invitations_patient_wallet_fkey FOREIGN KEY (patient_wallet) REFERENCES public.users(wallet_address),
   CONSTRAINT permission_invitations_grantee_wallet_fkey FOREIGN KEY (grantee_wallet) REFERENCES public.users(wallet_address)
 );
+CREATE TABLE public.fhir_knowledge (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  category text NOT NULL CHECK (category = ANY (ARRAY['loinc'::text, 'guideline'::text, 'profile'::text])),
+  content text NOT NULL,
+  metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
+  embedding USER-DEFINED,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT fhir_knowledge_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.consent_log (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  actor_wallet text NOT NULL,
+  action text NOT NULL,
+  session_id text NOT NULL UNIQUE,
+  document_cid text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT consent_log_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.document_metadata (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  document_id text NOT NULL UNIQUE,
+  document_type text NOT NULL,
+  standard text,
+  classification text,
+  patient_wallet text NOT NULL,
+  uploader_wallet text NOT NULL,
+  uploader_public_key text,
+  related_cid text,
+  fhir_compliance jsonb,
+  session_id text,
+  episode_id text,
+  file_name text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT document_metadata_pkey PRIMARY KEY (id)
+);
