@@ -1,0 +1,25 @@
+{
+  "pruning-enabled": true,
+  "state-sync-enabled": true,
+  "offline-pruning-enabled": false,
+
+  "eth-apis": [
+    "eth",
+    "eth-filter",
+    "net",
+    "web3",
+    "internal-eth",
+    "internal-blockchain",
+    "internal-transaction"
+  ],
+
+  "validators-api-enabled": true,
+  "admin-api-enabled": false,
+  "warp-api-enabled": true,
+
+  "log-level": "info",
+  "log-json-format": false,
+
+  "rpc-gas-cap": 50000000,
+  "rpc-tx-fee-cap": 100
+}

@@ -4,9 +4,10 @@
 import type {
   BaseContract,
   BigNumberish,
+  BytesLike,
   FunctionFragment,
+  Result,
   Interface,
-  EventFragment,
   ContractRunner,
   ContractMethod,
   Listener,
@@ -15,31 +16,25 @@ import type {
   TypedContractEvent,
   TypedDeferredTopicFilter,
   TypedEventLog,
-  TypedLogDescription,
   TypedListener,
-} from "../../../../common";
+  TypedContractMethod,
+} from "../../common";
 
-export interface InitializableInterface extends Interface {
-  getEvent(nameOrSignatureOrTopic: "Initialized"): EventFragment;
+export interface PreflightInterface extends Interface {
+  getFunction(nameOrSignature: "set" | "value"): FunctionFragment;
+
+  encodeFunctionData(functionFragment: "set", values: [BigNumberish]): string;
+  encodeFunctionData(functionFragment: "value", values?: undefined): string;
+
+  decodeFunctionResult(functionFragment: "set", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "value", data: BytesLike): Result;
 }
 
-export namespace InitializedEvent {
-  export type InputTuple = [version: BigNumberish];
-  export type OutputTuple = [version: bigint];
-  export interface OutputObject {
-    version: bigint;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
-}
-
-export interface Initializable extends BaseContract {
-  connect(runner?: ContractRunner | null): Initializable;
+export interface Preflight extends BaseContract {
+  connect(runner?: ContractRunner | null): Preflight;
   waitForDeployment(): Promise<this>;
 
-  interface: InitializableInterface;
+  interface: PreflightInterface;
 
   queryFilter<TCEvent extends TypedContractEvent>(
     event: TCEvent,
@@ -78,28 +73,20 @@ export interface Initializable extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
+  set: TypedContractMethod<[_value: BigNumberish], [void], "nonpayable">;
+
+  value: TypedContractMethod<[], [bigint], "view">;
+
   getFunction<T extends ContractMethod = ContractMethod>(
     key: string | FunctionFragment
   ): T;
 
-  getEvent(
-    key: "Initialized"
-  ): TypedContractEvent<
-    InitializedEvent.InputTuple,
-    InitializedEvent.OutputTuple,
-    InitializedEvent.OutputObject
-  >;
+  getFunction(
+    nameOrSignature: "set"
+  ): TypedContractMethod<[_value: BigNumberish], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "value"
+  ): TypedContractMethod<[], [bigint], "view">;
 
-  filters: {
-    "Initialized(uint64)": TypedContractEvent<
-      InitializedEvent.InputTuple,
-      InitializedEvent.OutputTuple,
-      InitializedEvent.OutputObject
-    >;
-    Initialized: TypedContractEvent<
-      InitializedEvent.InputTuple,
-      InitializedEvent.OutputTuple,
-      InitializedEvent.OutputObject
-    >;
-  };
+  filters: {};
 }

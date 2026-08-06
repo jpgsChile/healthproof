@@ -1,0 +1,29 @@
+{
+  "network-id": "fuji",
+  "partial-sync-primary-network": true,
+  "track-subnets": "__SUBNET_ID__",
+
+  "http-host": "127.0.0.1",
+  "http-port": 9650,
+  "staking-port": 9651,
+
+  "api-admin-enabled": false,
+  "api-keystore-enabled": false,
+  "api-ipcs-enabled": false,
+  "api-auth-required": false,
+  "api-info-enabled": true,
+  "api-health-enabled": true,
+  "api-metrics-enabled": true,
+
+  "http-allowed-hosts": ["localhost", "127.0.0.1"],
+  "api-max-blocks-per-request": 30,
+
+  "public-ip-resolution-service": "opendns",
+
+  "log-level": "info",
+  "log-rotater-max-size": 100,
+  "log-rotater-max-files": 5,
+
+  "db-dir": "/home/ubuntu/.avalanchego/db",
+  "consensus-shutdown-timeout": "60s"
+}

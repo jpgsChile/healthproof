@@ -1,8 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server";
 
-const BACKEND_RPC =
-  process.env.NEXT_PUBLIC_RPC_URL ??
-  "http://3.141.110.34:9654/ext/bc/2qXqVm6f7B8LeMt4Gxa7V39LW8YVQiRuhzqH57Vaik9dD4VPRq/rpc";
+const BACKEND_RPC = process.env.NEXT_PUBLIC_RPC_URL;
+
+if (!BACKEND_RPC) {
+  throw new Error("NEXT_PUBLIC_RPC_URL is required");
+}
 
 function corsHeaders() {
   return {

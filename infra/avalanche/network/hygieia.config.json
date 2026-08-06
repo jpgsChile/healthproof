@@ -1,12 +1,13 @@
 {
-  "$schema": "https://avax.network/schemas/subnet-config.json",
+  "_comment": "Config de conveniencia para Hardhat. Fuente de verdad: network/deployment.json. RPC anterior (3.141.110.34) MUERTO.",
   "network": "hygieia",
   "chainId": 21668,
   "rpc": {
-    "url": "http://3.141.110.34:9654/ext/bc/2qXqVm6f7B8LeMt4Gxa7V39LW8YVQiRuhzqH57Vaik9dD4VPRq/rpc"
+    "url": "https://3.149.117.171.nip.io/ext/bc/2pCH2Ay6ZVYUSUoqu6HC2UijhzoujAwSNZWU4aHnLbeDNV9WEG/rpc"
   },
   "currency": {
-    "symbol": "HVE"
+    "symbol": "HVE",
+    "decimals": 18
   },
   "deployment": {
     "confirmations": 1,

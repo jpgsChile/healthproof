@@ -1,8 +1,12 @@
 import { ethers, network } from "hardhat";
+import fs from "fs";
+import path from "path";
+import { writeDeployment } from "./lib/writeDeployment";
+import type { DeploymentMetadata, DeploymentAddresses } from "./lib/writeDeployment";
 
 /**
  * UUPS Proxy Deployment Script for HealthProof Protocol
- * 
+ *
  * This script deploys all registries as UUPS upgradeable proxies.
  * The Kernel remains non-upgradeable as the router.
  */
@@ -359,6 +363,47 @@ async function main() {
     console.log("upgradeTo(newImplementationAddress) on the proxy contract.");
     console.log("Only the proxy owner (deployer) can authorize upgrades.");
 
+    /*
+    --------------------------------------------------
+    Persist artifact
+    --------------------------------------------------
+    */
+
+    const metadataPath = path.resolve(__dirname, "../../../../network/deployment.json");
+    let metadata: DeploymentMetadata | undefined;
+    try {
+        metadata = JSON.parse(fs.readFileSync(metadataPath, "utf-8"));
+    } catch (err) {
+        console.warn("Could not read network/deployment.json metadata; using defaults.", err);
+    }
+
+    if (metadata) {
+        const addresses: DeploymentAddresses = {
+            deployer: deployer.address,
+            relayer: deployer.address, // TODO: replace with dedicated relayer once generated
+            l1Owner: deployer.address, // TODO: separate cold owner key
+            trustedForwarder: trustedForwarderAddress,
+            identityRegistry: identityAddress,
+            identityRegistryImpl: await identityImpl.getAddress(),
+            guardianRegistry: guardianAddress,
+            guardianRegistryImpl: await guardianImpl.getAddress(),
+            permissionManager: permissionAddress,
+            permissionManagerImpl: await permissionImpl.getAddress(),
+            clinicalEpisodeRegistry: episodeAddress,
+            clinicalEpisodeRegistryImpl: await episodeImpl.getAddress(),
+            medicalOrderRegistry: orderAddress,
+            medicalOrderRegistryImpl: await orderImpl.getAddress(),
+            medicalDocumentRegistry: documentAddress,
+            medicalDocumentRegistryImpl: await documentImpl.getAddress(),
+            healthcareNetworkRegistry: networkRegistryAddress,
+            auditTrail: auditAddress,
+            healthProofKernel: kernelAddress,
+            healthProofGateway: gatewayAddress,
+            healthProofProtocol: protocolAddress,
+        };
+
+        writeDeployment(metadata, addresses);
+    }
 }
 
 main().catch((error) => {

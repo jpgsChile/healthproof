@@ -8,10 +8,6 @@ export type { src };
 export * as factories from "./factories";
 export type { OwnableUpgradeable } from "./@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable";
 export { OwnableUpgradeable__factory } from "./factories/@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable__factory";
-export type { Initializable } from "./@openzeppelin/contracts-upgradeable/proxy/utils/Initializable";
-export { Initializable__factory } from "./factories/@openzeppelin/contracts-upgradeable/proxy/utils/Initializable__factory";
-export type { UUPSUpgradeable } from "./@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable";
-export { UUPSUpgradeable__factory } from "./factories/@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable__factory";
 export type { ContextUpgradeable } from "./@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable";
 export { ContextUpgradeable__factory } from "./factories/@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable__factory";
 export type { IERC1822Proxiable } from "./@openzeppelin/contracts/interfaces/draft-IERC1822.sol/IERC1822Proxiable";
@@ -30,6 +26,10 @@ export type { ERC1967Utils } from "./@openzeppelin/contracts/proxy/ERC1967/ERC19
 export { ERC1967Utils__factory } from "./factories/@openzeppelin/contracts/proxy/ERC1967/ERC1967Utils__factory";
 export type { Proxy } from "./@openzeppelin/contracts/proxy/Proxy";
 export { Proxy__factory } from "./factories/@openzeppelin/contracts/proxy/Proxy__factory";
+export type { Initializable } from "./@openzeppelin/contracts/proxy/utils/Initializable";
+export { Initializable__factory } from "./factories/@openzeppelin/contracts/proxy/utils/Initializable__factory";
+export type { UUPSUpgradeable } from "./@openzeppelin/contracts/proxy/utils/UUPSUpgradeable";
+export { UUPSUpgradeable__factory } from "./factories/@openzeppelin/contracts/proxy/utils/UUPSUpgradeable__factory";
 export type { Address } from "./@openzeppelin/contracts/utils/Address";
 export { Address__factory } from "./factories/@openzeppelin/contracts/utils/Address__factory";
 export type { ECDSA } from "./@openzeppelin/contracts/utils/cryptography/ECDSA";
@@ -80,3 +80,5 @@ export type { HealthProofTrustedForwarder } from "./src/metatx/HealthProofTruste
 export { HealthProofTrustedForwarder__factory } from "./factories/src/metatx/HealthProofTrustedForwarder__factory";
 export type { HealthcareNetworkRegistry } from "./src/network/HealthcareNetworkRegistry";
 export { HealthcareNetworkRegistry__factory } from "./factories/src/network/HealthcareNetworkRegistry__factory";
+export type { Preflight } from "./src/preflight/Preflight";
+export { Preflight__factory } from "./factories/src/preflight/Preflight__factory";

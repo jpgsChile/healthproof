@@ -17,3 +17,5 @@ import type * as metatx from "./metatx";
 export type { metatx };
 import type * as network from "./network";
 export type { network };
+import type * as preflight from "./preflight";
+export type { preflight };

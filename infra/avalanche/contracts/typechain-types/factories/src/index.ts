@@ -9,3 +9,4 @@ export * as identity from "./identity";
 export * as interfaces from "./interfaces";
 export * as metatx from "./metatx";
 export * as network from "./network";
+export * as preflight from "./preflight";
