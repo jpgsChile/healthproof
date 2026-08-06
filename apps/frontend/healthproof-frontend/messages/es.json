@@ -502,11 +502,11 @@
 				"followUpIn": "Seguimiento sugerido en {when}"
 			},
 			"longitudinal": {
-				"title": "Comparación longitudinal (EMPA)",
+				"title": "Comparación longitudinal de evaluaciones",
 				"subtitle": "{count} controles",
-				"empty": "Necesitás al menos un EMPA previo registrado para comparar en el tiempo.",
-				"current": "Nuevo EMPA",
-				"currentLabel": "El punto resaltado es el EMPA que HealthProof Layer 1 acaba de registrar; los demás son controles previos de este mismo paciente."
+				"empty": "Necesitás al menos una evaluación previa registrada para comparar en el tiempo.",
+				"current": "Nueva evaluación",
+				"currentLabel": "El punto resaltado es la evaluación que HealthProof Layer 1 acaba de registrar; los demás son controles previos de este mismo paciente."
 			}
 		},
 		"permissions": {
@@ -1020,12 +1020,23 @@
 		"button": "Probar Demo",
 		"noAccountNeeded": "No necesitás cuenta ni wallet. Datos 100% ficticios."
 	},
+	"evaluation": {
+		"title": "Evaluación Preventiva Inteligente",
+		"protocol": "Protocolo aplicado",
+		"healthScore": "Health Score",
+		"summary": "Resumen de tu evaluación",
+		"recommendations": "Recomendaciones preventivas"
+	},
+	"protocol": {
+		"empa": "EMPA — Examen de Medicina Preventiva del Adulto",
+		"empam": "EMPAM — Examen de Medicina Preventiva del Adulto Mayor"
+	},
 	"demoPreventIa": {
-		"badge": "Prevent IA · Demo pública",
+		"badge": "Prevent IA · Evaluación Preventiva Inteligente",
 		"loading": "Cargando…",
-		"introEyebrow": "Prevent IA",
-		"introTitle": "Probá Prevent IA sin necesidad de cuenta",
-		"introBody": "Elegí uno de los resultados de ejemplo o cargá tu propio valor de examen para ver cómo Prevent IA calcula el Estado Preventivo.",
+		"introEyebrow": "Evaluación Preventiva Inteligente",
+		"introTitle": "Probá tu Evaluación Preventiva Inteligente sin necesidad de cuenta",
+		"introBody": "Elegí uno de los resultados de ejemplo o cargá tu propio valor de examen. Prevent IA determinará automáticamente el protocolo adecuado — nunca lo elegís vos.",
 		"preloadedLabel": "Resultados de ejemplo",
 		"customLabel": "O cargá tu propio examen",
 		"customExamType": "Examen",
@@ -1035,19 +1046,34 @@
 		"runButton": "Ejecutar Prevent IA",
 		"analyzingGreeting": "Hola. Soy Prevent IA.",
 		"wakingUp": "Prevent IA está despertando…",
-		"analyzingBody": "Ya revisé el resultado que elegiste. Voy a hacerte un par de preguntas rápidas para entregarte un análisis más preciso.",
+		"evaluationIntro": "Ya revisé el resultado que elegiste. Vamos a hacer una Evaluación Preventiva Inteligente personalizada — te haré algunas preguntas para determinar el protocolo adecuado y calcular tu Health Score.",
 		"continueButton": "Continuar",
-		"consentAgeQuestion": "¿Me autorizas a usar tu edad para este análisis de demostración?",
+		"consentAgeQuestion": "¿Me autorizas a usar tu edad para este análisis de demostración? Con ella determino automáticamente tu protocolo preventivo.",
 		"accept": "Aceptar",
 		"cancel": "Cancelar",
+		"provideAgeQuestion": "¿Qué edad tienes?",
+		"ageInputLabel": "Edad",
 		"smokingQuestion": "¿Fumas?",
 		"yes": "Sí",
 		"no": "No",
 		"familyHistoryQuestion": "¿Existen antecedentes de enfermedades cardiovasculares o diabetes en tu familia?",
+		"functionalAssessmentIntro": "Como parte de tu Evaluación Preventiva Inteligente para personas de 65 años o más, necesito hacerte algunas preguntas adicionales sobre tu funcionalidad diaria.",
+		"functional": {
+			"walkingDifficulty": "Dificultad para caminar",
+			"recentFalls": "Caídas recientes",
+			"usesCane": "Uso de bastón u otro apoyo",
+			"memoryConcerns": "Olvidos o problemas de memoria",
+			"basicActivitiesDifficulty": "Dificultad para actividades básicas (vestirse, bañarse, comer)",
+			"unintentionalWeightLoss": "Pérdida de peso no intencional",
+			"polypharmacy": "Toma 5 o más medicamentos (polifarmacia)",
+			"socialIsolation": "Aislamiento social",
+			"functionalDependence": "Dependencia funcional de otra persona"
+		},
 		"thanksMessage": "Gracias. Ya tengo suficiente información.",
 		"calculatingMessage": "Estoy calculando tu Estado Preventivo…",
 		"resultTitle": "Estado Preventivo",
 		"resultBrand": "HealthProof Prevent Score",
+		"protocolAppliedLabel": "Protocolo aplicado",
 		"statusHealthy": "Estado: Saludable",
 		"statusAlert": "Estado: Alerta preventiva",
 		"resultNarrative": {
@@ -1057,6 +1083,14 @@
 		},
 		"viewClinicalDetail": "Ver detalle clínico (para el médico)",
 		"hideClinicalDetail": "Ocultar detalle clínico",
+		"healthScoreModulesTitle": "Composición del Health Score",
+		"healthScoreModule": {
+			"laboratorio": "Laboratorio",
+			"factoresRiesgo": "Factores de riesgo",
+			"habitos": "Hábitos",
+			"conversacional": "Información conversacional",
+			"evaluacionFuncional": "Evaluación funcional"
+		},
 		"recommendationsTitle": "Estas acciones pueden mejorar tu Score.",
 		"shareQuestion": "¿Deseas compartir este análisis de demostración con un profesional de salud?",
 		"shareYes": "Sí, compartir",
