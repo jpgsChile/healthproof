@@ -8,6 +8,7 @@ import {
   FinalCtaSection,
   HeroCarouselSection,
   Icd11Section,
+  PreventIaCtaSection,
   RegulatoryUrgencySection,
   SolutionSection,
   TeamSection,
@@ -54,6 +55,14 @@ export function LandingPage() {
           <SectionDivider label={t("demoVideo")} />
         </ScrollReveal>
         <DemoVideoSection />
+
+        {/* §5.6 Try Prevent IA live (no login) */}
+        <ScrollReveal y={30} duration={0.5}>
+          <SectionDivider label={t("preventIa")} />
+        </ScrollReveal>
+        <ScrollReveal y={50} duration={0.8}>
+          <PreventIaCtaSection />
+        </ScrollReveal>
 
         {/* §6 Technology */}
         <ScrollReveal y={30} duration={0.5}>

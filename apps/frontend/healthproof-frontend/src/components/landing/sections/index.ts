@@ -3,6 +3,7 @@ export { DemoVideoSection } from "./DemoVideoSection";
 export { FinalCtaSection } from "./FinalCtaSection";
 export { HeroCarouselSection } from "./HeroCarouselSection";
 export { Icd11Section } from "./Icd11Section";
+export { PreventIaCtaSection } from "./PreventIaCtaSection";
 export { RegulatoryUrgencySection } from "./RegulatoryUrgencySection";
 export { SolutionSection } from "./SolutionSection";
 export { TeamSection } from "./TeamSection";
