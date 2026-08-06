@@ -66,7 +66,8 @@ function isSustainedUptrend(
   return true;
 }
 
-function riskLevelFromScore(score: number): RiskLevel {
+/** Exportada para que `protocols/*` (motor de selección EMPA/EMPAM) reutilice el mismo banding 0-100 sin duplicar los umbrales. */
+export function riskLevelFromScore(score: number): RiskLevel {
   if (score >= 85) return "bajo";
   if (score >= 60) return "moderado";
   return "alto";
