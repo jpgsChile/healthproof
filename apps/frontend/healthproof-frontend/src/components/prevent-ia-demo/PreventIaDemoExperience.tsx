@@ -7,19 +7,38 @@
  * (`ScoreGauge`, `PatientPanel`, `ClinicalSummaryPanel`,
  * `LongitudinalComparisonChart`, `DemoDataBanner`) — la única pieza nueva es
  * el envoltorio conversacional (burbujas + botones), que no existía antes.
+ *
+ * El chat se adapta según el protocolo que `PreventProtocolEngine`
+ * seleccionó (EMPA o EMPAM): el paso de Evaluación Funcional solo aparece
+ * para EMPAM. No es un componente nuevo por protocolo — es el mismo
+ * componente, mostrando un paso condicional más.
  */
 import { HeartPulse, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { ClinicalSummaryPanel } from "@/components/prevent-ia/ClinicalSummaryPanel";
 import { LongitudinalComparisonChart } from "@/components/prevent-ia/LongitudinalComparisonChart";
 import { PatientPanel } from "@/components/prevent-ia/PatientPanel";
 import { ScoreGauge } from "@/components/prevent-ia/ScoreGauge";
 import { Button } from "@/components/ui/Button";
+import type { FunctionalAssessmentAnswers } from "@/services/prevent-ia/protocols/base/PreventProtocol";
 import { type DemoShareTarget, SHARE_TARGETS, useDemo } from "./DemoProvider";
 import { ExamSourcePicker } from "./ExamSourcePicker";
 
 const MIN_CALCULATING_MS = 1600;
+const DEFAULT_AGE_INPUT = 45;
+
+const FUNCTIONAL_QUESTION_KEYS = [
+  "walkingDifficulty",
+  "recentFalls",
+  "usesCane",
+  "memoryConcerns",
+  "basicActivitiesDifficulty",
+  "unintentionalWeightLoss",
+  "polypharmacy",
+  "socialIsolation",
+  "functionalDependence",
+] as const satisfies readonly (keyof FunctionalAssessmentAnswers)[];
 
 function AgentBubble({ children }: { children: ReactNode }) {
   return (
@@ -63,7 +82,7 @@ function AnalyzingStep() {
             {t("wakingUp")}
           </p>
         ) : (
-          <p className="mt-2">{t("analyzingBody")}</p>
+          <p className="mt-2">{t("evaluationIntro")}</p>
         )}
       </AgentBubble>
       {revealed && (
@@ -75,18 +94,97 @@ function AnalyzingStep() {
   );
 }
 
+function ProvideAgeStep() {
+  const t = useTranslations("demoPreventIa");
+  const { provideAge } = useDemo();
+  const [value, setValue] = useState(String(DEFAULT_AGE_INPUT));
+
+  const handleContinue = () => {
+    const parsed = Number(value);
+    provideAge(
+      Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_AGE_INPUT,
+    );
+  };
+
+  return (
+    <div className="neu-shell border border-white/70 p-6 sm:p-8">
+      <AgentBubble>{t("provideAgeQuestion")}</AgentBubble>
+      <div className="mt-4 pl-14">
+        <label className="flex max-w-[160px] flex-col gap-1 text-sm text-slate-600">
+          {t("ageInputLabel")}
+          <input
+            type="number"
+            min={0}
+            max={120}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            className="neu-chip rounded-xl px-3 py-2 text-sm text-slate-700"
+          />
+        </label>
+      </div>
+      <AgentActions>
+        <Button onClick={handleContinue}>{t("continueButton")}</Button>
+      </AgentActions>
+    </div>
+  );
+}
+
+function FunctionalAssessmentStep() {
+  const t = useTranslations("demoPreventIa");
+  const { functional, setFunctionalAnswer, submitFunctionalAssessment } =
+    useDemo();
+
+  return (
+    <div className="neu-shell border border-white/70 p-6 sm:p-8">
+      <AgentBubble>{t("functionalAssessmentIntro")}</AgentBubble>
+      <div className="mt-4 grid gap-2 pl-14 sm:grid-cols-2">
+        {FUNCTIONAL_QUESTION_KEYS.map((key) => (
+          <label
+            key={key}
+            className="neu-chip flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-700"
+          >
+            <input
+              type="checkbox"
+              checked={functional[key] === true}
+              onChange={(e) => setFunctionalAnswer(key, e.target.checked)}
+              className="h-4 w-4"
+            />
+            {t(`functional.${key}`)}
+          </label>
+        ))}
+      </div>
+      <AgentActions>
+        <Button onClick={submitFunctionalAssessment}>
+          {t("continueButton")}
+        </Button>
+      </AgentActions>
+    </div>
+  );
+}
+
 function CalculatingStep() {
   const t = useTranslations("demoPreventIa");
-  const { analysis, goToResult } = useDemo();
+  const { analysis, runFinalAnalysis, goToResult } = useDemo();
   const [startedAt] = useState(() => Date.now());
+  const triggeredRef = useRef(false);
+
+  useEffect(() => {
+    // `triggeredRef` garantiza una sola corrida al entrar a este paso, aunque
+    // `runFinalAnalysis` cambie de identidad entre renders (lee el estado más
+    // reciente del contexto de todos modos).
+    if (triggeredRef.current) return;
+    triggeredRef.current = true;
+    runFinalAnalysis();
+  }, [runFinalAnalysis]);
 
   useEffect(() => {
     if (analysis.loading) return;
+    if (!analysis.data && !analysis.error) return; // todavía no arrancó
     const elapsed = Date.now() - startedAt;
     const remaining = Math.max(MIN_CALCULATING_MS - elapsed, 0);
     const timer = setTimeout(goToResult, remaining);
     return () => clearTimeout(timer);
-  }, [analysis.loading, startedAt, goToResult]);
+  }, [analysis.loading, analysis.data, analysis.error, startedAt, goToResult]);
 
   return (
     <div className="neu-shell border border-white/70 p-6 sm:p-8">
@@ -103,6 +201,7 @@ function CalculatingStep() {
 
 function ResultStep() {
   const t = useTranslations("demoPreventIa");
+  const tProtocol = useTranslations("protocol");
   const { analysis, goToRecommendations, restart } = useDemo();
   const [showClinicalDetail, setShowClinicalDetail] = useState(false);
   const data = analysis.data;
@@ -124,9 +223,14 @@ function ResultStep() {
 
   return (
     <div className="neu-shell border border-white/70 p-6 sm:p-8">
-      <p className="text-center text-xs font-semibold uppercase tracking-widest text-sky-600">
-        {t("resultTitle")}
-      </p>
+      <div className="flex items-center justify-center gap-2">
+        <p className="text-center text-xs font-semibold uppercase tracking-widest text-sky-600">
+          {t("resultTitle")}
+        </p>
+        <span className="neu-chip rounded-full px-3 py-1 text-[11px] font-semibold text-slate-600">
+          {t("protocolAppliedLabel")}: {tProtocol(data.protocol)}
+        </span>
+      </div>
       <div className="mt-4 flex justify-center">
         <ScoreGauge
           score={data.result.healthScore}
@@ -162,6 +266,27 @@ function ResultStep() {
             current={data.current}
             history={data.history}
           />
+          <div className="neu-surface p-6">
+            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-sky-600">
+              {t("healthScoreModulesTitle")}
+            </h3>
+            <ul className="space-y-2 text-sm text-slate-600">
+              {data.healthScoreModules.map((module) => (
+                <li key={module.key} className="flex justify-between gap-3">
+                  <span>{t(`healthScoreModule.${module.key}`)}</span>
+                  <span
+                    className={
+                      module.points < 0
+                        ? "font-medium text-amber-600"
+                        : "text-slate-400"
+                    }
+                  >
+                    {module.points === 0 ? "—" : module.points}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
           <div className="sm:col-span-2">
             <LongitudinalComparisonChart points={data.scoreTimeline} />
           </div>
@@ -229,6 +354,8 @@ export function PreventIaDemoExperience() {
         </div>
       )}
 
+      {step === "provideAge" && <ProvideAgeStep />}
+
       {step === "questionSmoking" && (
         <div className="neu-shell border border-white/70 p-6 sm:p-8">
           <AgentBubble>{t("smokingQuestion")}</AgentBubble>
@@ -257,6 +384,8 @@ export function PreventIaDemoExperience() {
           </AgentActions>
         </div>
       )}
+
+      {step === "functionalAssessment" && <FunctionalAssessmentStep />}
 
       {step === "calculating" && <CalculatingStep />}
 

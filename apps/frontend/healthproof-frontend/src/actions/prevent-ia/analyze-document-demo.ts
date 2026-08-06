@@ -1,33 +1,44 @@
 "use server";
 
-/**
- * Entrada PÚBLICA (sin autenticación) al mismo caso de uso de
- * `analyze-document.ts`: motor de Health Score + agente Prevent IA.
- *
- * Existe para la demo pública (`/demo/prevent`, ver plan "Arquitecto
- * Principal") donde un visitante sin cuenta puede probar Prevent IA. No se
- * duplica ninguna regla de negocio: se reutiliza `runPreventIaAnalysis()` y
- * `SCENARIOS`, exportados desde `analyze-document.ts` — el server action
- * autenticado (`analyzeDocument`) no se modifica ni cambia su contrato.
- *
- * Nunca toca datos reales: solo opera sobre los escenarios mock existentes
- * o sobre un examen "custom" armado en memoria con la forma de
- * `ClinicalTriggerPayload` (mismo tipo que usa el flujo real), sin historial
- * clínico real y sin ninguna escritura a Supabase/on-chain.
- */
 import { checkRateLimit, RateLimitError } from "@/lib/auth/rate-limit";
+/**
+ * Entrada PÚBLICA (sin autenticación) a la Evaluación Preventiva Inteligente
+ * (EPI): `PreventProtocolEngine` elige automáticamente el protocolo (EMPA o
+ * EMPAM, según edad) y ese protocolo compone el mismo motor de Health Score
+ * y el mismo agente que ya existían — no se duplica ninguna regla de
+ * negocio.
+ *
+ * Existe para la demo pública (`/demo/prevent`) donde un visitante sin
+ * cuenta puede probar la EPI. Nunca toca datos reales: solo opera sobre los
+ * escenarios mock existentes o sobre un examen "custom" armado en memoria,
+ * sin historial clínico real y sin ninguna escritura a Supabase/on-chain.
+ */
+import { runPreventIaAgent } from "@/services/prevent-ia/agent";
 import { DEMO_EXAM_TYPES } from "@/services/prevent-ia/demo-exam-types";
+import {
+  DEFAULT_ADULT_AGE,
+  selectProtocol,
+} from "@/services/prevent-ia/engine/PreventProtocolEngine";
+import type { ScoreTimelinePoint } from "@/services/prevent-ia/health-score-engine";
+import {
+  buildScoreTimeline,
+  calculateHealthScore,
+  type HealthScoreBreakdown,
+} from "@/services/prevent-ia/health-score-engine";
+import type {
+  ConversationalAnswers,
+  FunctionalAssessmentAnswers,
+  HealthScoreModule,
+  ProtocolKey,
+} from "@/services/prevent-ia/protocols/base/PreventProtocol";
 import { getReferenceRange } from "@/services/prevent-ia/reference-ranges";
 import { SCENARIOS, type ScenarioKey } from "@/services/prevent-ia/scenarios";
 import type {
   ClinicalResult,
   ClinicalTriggerPayload,
   PatientHistoryEntry,
+  PreventIaResult,
 } from "@/services/prevent-ia/types";
-import {
-  type AnalyzeDocumentResponse,
-  runPreventIaAnalysis,
-} from "./analyze-document";
 
 const DEFAULT_SCENARIO: ScenarioKey = "escenario_riesgo_bajo";
 
@@ -39,13 +50,25 @@ export interface DemoCustomExam {
 export interface AnalyzeDemoParams {
   scenario?: ScenarioKey;
   customExam?: DemoCustomExam;
+  /** Edad autorizada por el visitante — si falta, se asume un adulto (EMPA) para no bloquear la demo. */
+  age?: number;
+  conversational: ConversationalAnswers;
+  /** Solo la envía el chat cuando `PreventProtocolEngine` selecciona EMPAM. */
+  functional?: FunctionalAssessmentAnswers;
 }
 
 export type AnalyzeDemoScenarioTag = ScenarioKey | "custom";
 
-export interface AnalyzeDemoResponse
-  extends Omit<AnalyzeDocumentResponse, "scenario"> {
+export interface AnalyzeDemoResponse {
   scenario: AnalyzeDemoScenarioTag;
+  current: ClinicalResult;
+  history: PatientHistoryEntry[];
+  result: PreventIaResult;
+  scoreTimeline: ScoreTimelinePoint[];
+  /** Protocolo que `PreventProtocolEngine` determinó automáticamente — el visitante nunca lo elige. */
+  protocol: ProtocolKey;
+  /** Desglose del Health Score modular (Laboratorio, Factores de Riesgo, Hábitos, Información Conversacional y, en EMPAM, Evaluación Funcional). */
+  healthScoreModules: HealthScoreModule[];
 }
 
 export type AnalyzeDemoResult =
@@ -120,7 +143,54 @@ export async function analyzeDocumentDemo(
       scenarioTag = key;
     }
 
-    const { result, scoreTimeline } = await runPreventIaAnalysis(payload);
+    // 1) PreventProtocolEngine determina el protocolo — nunca lo elige el visitante.
+    const age = params.age ?? DEFAULT_ADULT_AGE;
+    const protocol = selectProtocol({ age });
+
+    // 2) El protocolo compone el motor de Health Score existente (Laboratorio +
+    //    Factores de Riesgo) con sus módulos nuevos (Hábitos, Conversacional y,
+    //    en EMPAM, Evaluación Funcional).
+    const protocolAnalysis = protocol.analyze({
+      current: payload.offchain,
+      history: payload.historialPrevio,
+      profile: { age },
+      conversational: params.conversational,
+      functional: params.functional,
+    });
+
+    // 3) El agente (Claude o plantilla, sin cambios) redacta el texto humano a
+    //    partir del score ya calculado — se le pasa el breakdown de laboratorio
+    //    original con el score/riesgo/explicación ya sobreescritos por el
+    //    protocolo, para no tocar la firma de `runPreventIaAgent`.
+    const labBreakdown = calculateHealthScore(
+      payload.offchain,
+      payload.historialPrevio,
+    );
+    const combinedBreakdown: HealthScoreBreakdown = {
+      ...labBreakdown,
+      healthScore: protocolAnalysis.healthScore.healthScore,
+      riskLevel: protocolAnalysis.healthScore.riskLevel,
+      scoreExplanation: protocolAnalysis.scoreExplanation,
+    };
+    const result = await runPreventIaAgent(payload, combinedBreakdown);
+
+    // 4) La comparación longitudinal sigue mostrando la serie real de
+    //    laboratorio; solo el punto actual se alinea con el score modular para
+    //    que el gauge y el gráfico muestren el mismo número.
+    const rawTimeline = buildScoreTimeline(
+      payload.offchain,
+      payload.historialPrevio,
+      payload.onchain.createdAt,
+    );
+    const scoreTimeline = rawTimeline.map((point) =>
+      point.isCurrent
+        ? {
+            ...point,
+            healthScore: protocolAnalysis.healthScore.healthScore,
+            riskLevel: protocolAnalysis.healthScore.riskLevel,
+          }
+        : point,
+    );
 
     return {
       success: true,
@@ -130,6 +200,8 @@ export async function analyzeDocumentDemo(
         history: payload.historialPrevio,
         result,
         scoreTimeline,
+        protocol: protocol.key,
+        healthScoreModules: protocolAnalysis.healthScore.modules,
       },
     };
   } catch (error) {
