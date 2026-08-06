@@ -1,10 +1,10 @@
 "use client";
 
-import { useLoginWithEmail, usePrivy } from "@privy-io/react-auth";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { sileo } from "sileo";
+import { useSafeLoginWithEmail, useSafePrivy } from "@/hooks/auth/useSafePrivy";
 import { Link } from "@/i18n/navigation";
 import { ROLE_ICONS } from "@/lib/icons";
 import { ROLES, type UserRole } from "@/types/domain.types";
@@ -13,8 +13,8 @@ export default function AuthPage() {
   const t = useTranslations("auth");
   const tRoles = useTranslations("roles");
   const locale = useLocale();
-  const { ready, authenticated, login: privyLogin } = usePrivy();
-  const { sendCode, loginWithCode } = useLoginWithEmail();
+  const { ready, authenticated, login: privyLogin } = useSafePrivy();
+  const { sendCode, loginWithCode } = useSafeLoginWithEmail();
   const redirectedRef = useRef(false);
 
   const [mode, setMode] = useState<"signin" | "signup">("signup");

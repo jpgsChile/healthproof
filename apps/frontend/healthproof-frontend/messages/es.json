@@ -1811,6 +1811,9 @@
 		"scannerErrorLabel": "Error del escáner:",
 		"retryCamera": "Reintentar permiso de cámara"
 	},
+	"demoMode": {
+		"banner": "Modo Demo - Wallet deshabilitada"
+	},
 	"privyError": {
 		"privyTitle": "Configuración de Privy requerida",
 		"privyDesc": "Este dominio no está autorizado en la configuración de Privy. Agrega {{origin}} en el dashboard de Privy → Settings → Allowed Origins.",

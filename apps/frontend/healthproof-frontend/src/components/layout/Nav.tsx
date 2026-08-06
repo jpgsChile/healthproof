@@ -1,10 +1,10 @@
 "use client";
 
-import { usePrivy } from "@privy-io/react-auth";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { sileo } from "sileo";
 import { clearDbUserCache } from "@/hooks/auth/useDbUser";
+import { useSafePrivy } from "@/hooks/auth/useSafePrivy";
 import {
   Link,
   usePathname as useIntlPathname,
@@ -15,7 +15,7 @@ import { useUiStore } from "@/state/ui.store";
 
 export function Nav() {
   const t = useTranslations("nav");
-  const { ready, authenticated, logout } = usePrivy();
+  const { ready, authenticated, logout } = useSafePrivy();
   const setSheetOpen = useUiStore((s) => s.setMobileSheetOpen);
   const locale = useLocale();
   const intlRouter = useIntlRouter();

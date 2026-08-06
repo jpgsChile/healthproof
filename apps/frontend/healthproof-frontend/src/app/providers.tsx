@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { RecoveryCodeModal } from "@/components/auth/RecoveryCodeModal";
 import { RecoveryInputModal } from "@/components/auth/RecoveryInputModal";
 import { RegenerateKeysModal } from "@/components/auth/RegenerateKeysModal";
+import { DemoModeBanner } from "@/components/feedback/DemoModeBanner";
 import { KeyConflictBanner } from "@/components/feedback/KeyConflictBanner";
 import { PrivyErrorBoundary } from "@/components/feedback/PrivyErrorBoundary";
 import { RpcHealthBanner } from "@/components/feedback/RpcHealthBanner";
@@ -97,11 +98,37 @@ function PrivyTokenSync({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ * Único chequeo que decide el modo: mismo criterio "vacío = inválido" que
+ * hoy hace que `<PrivyProvider appId="">` lance "Cannot initialize the
+ * Privy provider with an invalid Privy app ID". Revertir a Privy real es
+ * automático — no hay ningún flag que apagar, solo configurar el env var.
+ */
+function hasValidPrivyAppId(appId: string | undefined): appId is string {
+  return typeof appId === "string" && appId.trim().length > 0;
+}
+
 export function Providers({ children }: { children: React.ReactNode }) {
+  const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID;
+
+  // Modo Demo: sin App ID válido, nunca montamos <PrivyProvider> (evita el
+  // throw síncrono de Privy) y renderizamos la app igual, con un banner
+  // discreto. Wallet/login quedan deshabilitados — el resto de la app (Nav,
+  // MobileSheet, landing, demo pública, etc.) sigue funcionando: usan
+  // `useSafePrivy()` en vez de `usePrivy()` para no depender del Provider.
+  if (!hasValidPrivyAppId(appId)) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <DemoModeBanner />
+        {children}
+      </QueryClientProvider>
+    );
+  }
+
   return (
     <PrivyErrorBoundary>
       <PrivyProvider
-        appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID ?? ""}
+        appId={appId}
         config={{
           loginMethods: ["email", "wallet", "google"],
           appearance: {

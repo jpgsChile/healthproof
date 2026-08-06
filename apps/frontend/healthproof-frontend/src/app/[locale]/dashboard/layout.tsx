@@ -1,9 +1,9 @@
 "use client";
 
-import { usePrivy } from "@privy-io/react-auth";
 import { useEffect, useMemo } from "react";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { useDbUser } from "@/hooks/auth/useDbUser";
+import { useSafePrivy } from "@/hooks/auth/useSafePrivy";
 import { useWalletAddress } from "@/hooks/auth/useWalletAddress";
 import { useOnChainRole } from "@/hooks/healthcare-networks/useOnChainRole";
 import { useRouter } from "@/i18n/navigation";
@@ -15,7 +15,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }>) {
   const router = useRouter();
-  const { ready, authenticated } = usePrivy();
+  const { ready, authenticated } = useSafePrivy();
   const { dbUser, loading: dbLoading } = useDbUser();
   const walletAddress = useWalletAddress();
   const { role: onChainRole, loading: roleLoading } =
