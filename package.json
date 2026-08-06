@@ -1,29 +1,9 @@
 {
-  "name": "healthproof",
-  "version": "0.1.0",
-  "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
-  "scripts": {
-    "build": "npm run build --workspaces --if-present",
-    "build:contracts": "npm run build -w @healthproof/contracts",
-    "build:backend": "npm run build -w @healthproof/backend",
-    "build:frontend": "npm run build -w @healthproof/frontend",
-    "build:packages": "npm run build -w @healthproof/encryption -w @healthproof/did -w @healthproof/blockchain-sdk",
-    "test": "npm run test --workspaces --if-present",
-    "test:contracts": "npm run test -w @healthproof/contracts",
-    "dev:backend": "npm run start:dev -w @healthproof/backend",
-    "dev:frontend": "npm run dev -w @healthproof/frontend",
-    "db:generate": "npm run db:generate -w @healthproof/backend",
-    "db:push": "npm run db:push -w @healthproof/backend",
-    "db:studio": "npm run db:studio -w @healthproof/backend"
-  },
-  "engines": {
-    "node": ">=18"
-  },
-  "dependencies": {
-    "sileo": "^0.1.5"
+  "packageManager": "pnpm@10.0.0+sha512.b8fef5494bd3fe4cbd4edabd0745df2ee5be3e4b0b8b08fa643aa3e4c6702ccc0f00d68fa8a8c9858a735a0032485a44990ed2810526c875e416f001b17df12b",
+  "pnpm": {
+    "overrides": {
+      "@solana/kit": "^6.10.0",
+      "@solana/sysvars": "^5.5.1"
+    }
   }
 }

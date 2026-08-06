@@ -2,16 +2,43 @@
 pragma solidity ^0.8.20;
 
 import "../identity/IdentityRegistry.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "../metatx/ERC2771ContextUpgradeable.sol";
 
-//  Gestiona órdenes médicas dentro del protocolo HealthProof.
-//  Diseñado para flujos hospitalarios reales (consulta → orden → examen → resultado)
+///  Gestiona órdenes médicas dentro del protocolo HealthProof.
+///  Diseñado para flujos hospitalarios reales (consulta → orden → examen → resultado)
 
-contract MedicalOrderRegistry {
+contract MedicalOrderRegistry is 
+    Initializable,
+    OwnableUpgradeable,
+    UUPSUpgradeable,
+    ERC2771ContextUpgradeable
+{
 
     IdentityRegistry public identityRegistry;
+    address public gateway;
 
-    constructor(address identityAddress) {
+    function initialize(address identityAddress, address forwarder) public initializer {
+        __Ownable_init(msg.sender);
+        __ERC2771Context_init(forwarder);
         identityRegistry = IdentityRegistry(identityAddress);
+    }
+
+    /// @dev Override _msgSender() to support ERC2771 meta-transactions
+    function _msgSender() internal view override returns (address) {
+        return _erc2771MsgSender();
+    }
+
+    /// @dev Override _msgData() to support ERC2771 meta-transactions
+    function _msgData() internal view override returns (bytes calldata) {
+        return _erc2771MsgData();
+    }
+
+    function setGateway(address _gateway) external onlyOwner {
+        require(_gateway != address(0), "Invalid gateway");
+        gateway = _gateway;
     }
 
     /// Estados de una orden médica
@@ -38,6 +65,11 @@ contract MedicalOrderRegistry {
 
     /// almacenamiento de órdenes
     mapping(bytes32 => MedicalOrder) public orders;
+
+    /// índices por address (para listar sin costo de event scanning)
+    mapping(address => bytes32[]) public patientOrders;
+    mapping(address => bytes32[]) public doctorOrders;
+    mapping(address => bytes32[]) public labOrders;
 
     /// eventos para indexadores
     event MedicalOrderCreated(
@@ -67,7 +99,15 @@ contract MedicalOrderRegistry {
 
     modifier onlyVerified() {
         require(
-            identityRegistry.isVerified(msg.sender),
+            identityRegistry.isVerified(_msgSender()),
+            "Entidad no verificada"
+        );
+        _;
+    }
+
+    modifier onlyVerifiedOrGateway() {
+        require(
+            identityRegistry.isVerified(_msgSender()) || _msgSender() == gateway,
             "Entidad no verificada"
         );
         _;
@@ -75,10 +115,58 @@ contract MedicalOrderRegistry {
 
     modifier onlyDoctor() {
         require(
-            identityRegistry.getRole(msg.sender)
+            identityRegistry.getRole(_msgSender())
                 == IdentityRegistry.Role.DOCTOR,
             "Solo doctores"
         );
+        _;
+    }
+
+    /// @dev When called via Gateway, verifies the provided doctor is real.
+    ///      When called directly, verifies the caller is a doctor.
+    modifier onlyDoctorOrGatewayActor(address doctor) {
+        if (_msgSender() == gateway) {
+            require(
+                identityRegistry.getRole(doctor) == IdentityRegistry.Role.DOCTOR,
+                "Invalid doctor"
+            );
+            require(identityRegistry.isVerified(doctor), "Doctor not verified");
+        } else {
+            require(
+                identityRegistry.getRole(_msgSender()) == IdentityRegistry.Role.DOCTOR,
+                "Solo doctores"
+            );
+        }
+        _;
+    }
+
+    /// @dev When called via Gateway, verifies the provided patient is real.
+    ///      When called directly, verifies the caller is the patient.
+    modifier onlyPatientOrGatewayActor(address patient) {
+        if (_msgSender() == gateway) {
+            // Gateway validated patient; nothing extra to check on-chain
+        } else {
+            require(_msgSender() == patient, "Solo paciente puede asignar laboratorio");
+        }
+        _;
+    }
+
+    /// @dev When called via Gateway, verifies the provided updater is order doctor or lab.
+    ///      When called directly, verifies the caller is order doctor or lab.
+    modifier onlyUpdaterOrGatewayActor(bytes32 orderId, address updater) {
+        if (_msgSender() == gateway) {
+            MedicalOrder storage order = orders[orderId];
+            require(
+                updater == order.doctor || updater == order.assignedLab,
+                "Updater must be order doctor or assigned lab"
+            );
+        } else {
+            MedicalOrder storage order = orders[orderId];
+            require(
+                _msgSender() == order.doctor || _msgSender() == order.assignedLab,
+                "No autorizado"
+            );
+        }
         _;
     }
 
@@ -100,11 +188,12 @@ contract MedicalOrderRegistry {
         address institution,
         bytes32 episodeId,
         bytes32 orderType,
-        bytes32 examType
+        bytes32 examType,
+        address doctor
     )
         external
-        onlyVerified
-        onlyDoctor
+        onlyVerifiedOrGateway
+        onlyDoctorOrGatewayActor(doctor)
     {
 
         require(
@@ -114,7 +203,7 @@ contract MedicalOrderRegistry {
 
         orders[orderId] = MedicalOrder({
             patient: patient,
-            doctor: msg.sender,
+            doctor: doctor,
             institution: institution,
             episodeId: episodeId,
             orderType: orderType,
@@ -124,10 +213,13 @@ contract MedicalOrderRegistry {
             createdAt: uint64(block.timestamp)
         });
 
+        patientOrders[patient].push(orderId);
+        doctorOrders[doctor].push(orderId);
+
         emit MedicalOrderCreated(
             orderId,
             patient,
-            msg.sender,
+            doctor,
             episodeId,
             examType,
             uint64(block.timestamp)
@@ -140,19 +232,16 @@ contract MedicalOrderRegistry {
 
     function assignLab(
         bytes32 orderId,
-        address lab
+        address lab,
+        address patient
     )
         external
         orderExists(orderId)
-        onlyVerified
+        onlyVerifiedOrGateway
+        onlyPatientOrGatewayActor(patient)
     {
 
         MedicalOrder storage order = orders[orderId];
-
-        require(
-            msg.sender == order.patient,
-            "Solo el paciente puede asignar laboratorio"
-        );
 
         require(
             identityRegistry.getRole(lab)
@@ -162,6 +251,7 @@ contract MedicalOrderRegistry {
 
         order.assignedLab = lab;
         order.status = OrderStatus.LAB_ASSIGNED;
+        labOrders[lab].push(orderId);
         emit LabAssigned(
             orderId,
             lab,
@@ -175,21 +265,16 @@ contract MedicalOrderRegistry {
 
     function updateStatus(
         bytes32 orderId,
-        OrderStatus status
+        OrderStatus status,
+        address updater
     )
         external
         orderExists(orderId)
-        onlyVerified
+        onlyVerifiedOrGateway
+        onlyUpdaterOrGatewayActor(orderId, updater)
     {
 
         MedicalOrder storage order = orders[orderId];
-
-        /// solo laboratorio asignado o doctor
-        require(
-            msg.sender == order.assignedLab ||
-            msg.sender == order.doctor,
-            "No autorizado"
-        );
 
         order.status = status;
 
@@ -215,4 +300,62 @@ contract MedicalOrderRegistry {
 
         return orders[orderId];
     }
+
+    /// -------------------------------------
+    /// LISTAR ORDENES (paginado)
+    /// -------------------------------------
+
+    function getOrdersByPatient(
+        address patient,
+        uint256 offset,
+        uint256 limit
+    ) external view returns (bytes32[] memory result, uint256 total) {
+        bytes32[] storage list = patientOrders[patient];
+        total = list.length;
+        if (offset >= total) return (new bytes32[](0), total);
+        uint256 end = offset + limit;
+        if (end > total) end = total;
+        result = new bytes32[](end - offset);
+        for (uint256 i = offset; i < end; i++) {
+            result[i - offset] = list[i];
+        }
+    }
+
+    function getOrdersByDoctor(
+        address doctor,
+        uint256 offset,
+        uint256 limit
+    ) external view returns (bytes32[] memory result, uint256 total) {
+        bytes32[] storage list = doctorOrders[doctor];
+        total = list.length;
+        if (offset >= total) return (new bytes32[](0), total);
+        uint256 end = offset + limit;
+        if (end > total) end = total;
+        result = new bytes32[](end - offset);
+        for (uint256 i = offset; i < end; i++) {
+            result[i - offset] = list[i];
+        }
+    }
+
+    function getOrdersByLab(
+        address lab,
+        uint256 offset,
+        uint256 limit
+    ) external view returns (bytes32[] memory result, uint256 total) {
+        bytes32[] storage list = labOrders[lab];
+        total = list.length;
+        if (offset >= total) return (new bytes32[](0), total);
+        uint256 end = offset + limit;
+        if (end > total) end = total;
+        result = new bytes32[](end - offset);
+        for (uint256 i = offset; i < end; i++) {
+            result[i - offset] = list[i];
+        }
+    }
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {
+        // Solo el owner puede autorizar upgrades
+    }
+
+    uint256[50] private __gap;
 }

@@ -120,7 +120,7 @@ infra/avalanche/
 ### Red objetivo: Hygieia (L1)
 
 - **Network name**: `Hygieia`
-- **RPC**: `http://18.223.252.59:9650/ext/bc/kZYSkYiknAeZJbwtz4M6tN9YmbriGiLQwLKR4Pr7S2UEXQQuW/rpc`
+- **RPC**: `http://3.141.110.34:9654/ext/bc/2qXqVm6f7B8LeMt4Gxa7V39LW8YVQiRuhzqH57Vaik9dD4VPRq/rpc`
 - **Chain ID**: `21668`
 - **Currency symbol**: `HVE`
 
@@ -148,7 +148,7 @@ Crea un archivo `.env` en `contracts/`:
 
 ```env
 PRIVATE_KEY=0x...          # Clave privada del deployer (sin 0x opcional)
-HYGIEIA_RPC_URL=http://18.223.252.59:9650/ext/bc/kZYSkYiknAeZJbwtz4M6tN9YmbriGiLQwLKR4Pr7S2UEXQQuW/rpc   # Opcional, hay valor por defecto
+HYGIEIA_RPC_URL=http://3.141.110.34:9654/ext/bc/2qXqVm6f7B8LeMt4Gxa7V39LW8YVQiRuhzqH57Vaik9dD4VPRq/rpc   # Opcional, hay valor por defecto
 ```
 
 ### Opciones de deployment
@@ -233,6 +233,26 @@ npm run deploy:healthproof:hygieia
 - **ethers.js** v6
 - **TypeScript** ^5.3
 - **Hygieia** (Avalanche L1, chainId 21668)
+
+---
+
+## Seguridad del Nodo
+
+La IP del nodo EC2 (`3.141.110.34`) ha sido expuesta en commits anteriores del monorepo. Es **obligatorio** ejecutar el hardening completo antes de considerar la infraestructura segura.
+
+Ver [`HARDENING.md`](HARDENING.md) para la guía detallada que cubre:
+
+- **AWS Security Groups**: Restringir SSH y RPC a IPs específicas
+- **SSH Hardening**: Cambio de puerto, deshabilitar root/password, banner de advertencia
+- **UFW Firewall**: Bloquear todo excepto P2P, Nginx y SSH
+- **Avalanche Config**: Deshabilitar `api-admin`, `api-keystore`, binding a `127.0.0.1`
+- **Nginx Reverse Proxy**: Rate limiting (10 req/s), filtrado de methods, headers de seguridad
+- **Fail2ban**: Protección SSH y bloqueo por abuso de RPC
+- **Auto-updates**: `unattended-upgrades` para parches de seguridad
+- **Elastic IP nueva**: Opción para desvincular la IP expuesta
+- **AWS ALB + Subnet Privada**: Arquitectura de producción recomendada
+
+> **⚠️ ADVERTENCIA**: No publiques este monorepo completo como público sin haber ejecutado el hardening. Considera crear un repo público limpio solo con `apps/frontend/healthproof-frontend`.
 
 ---
 
