@@ -502,11 +502,11 @@
 				"followUpIn": "Follow-up suggested in {when}"
 			},
 			"longitudinal": {
-				"title": "Longitudinal comparison (EMPA)",
+				"title": "Longitudinal comparison of evaluations",
 				"subtitle": "{count} check-ups",
-				"empty": "You need at least one previous EMPA on record to compare over time.",
-				"current": "New EMPA",
-				"currentLabel": "The highlighted point is the EMPA that HealthProof Layer 1 just recorded; the others are this same patient's previous check-ups."
+				"empty": "You need at least one previous evaluation on record to compare over time.",
+				"current": "New evaluation",
+				"currentLabel": "The highlighted point is the evaluation that HealthProof Layer 1 just recorded; the others are this same patient's previous check-ups."
 			}
 		},
 		"permissions": {
@@ -1007,10 +1007,104 @@
 		"useCases": "Use Cases",
 		"howItWorks": "How It Works",
 		"demoVideo": "Demo",
+		"preventIa": "Prevent IA",
 		"technology": "Technology",
 		"team": "Team",
 		"icd11": "ICD-11",
 		"beforeAfter": "Before / After"
+	},
+	"preventIaCta": {
+		"eyebrow": "🚀 Try Prevent IA",
+		"title": "Analyze a clinical exam in seconds",
+		"description": "Try HealthProof's preventive agent with demo data — no account, no wallet needed.",
+		"button": "Try the Demo",
+		"noAccountNeeded": "No account or wallet needed. 100% fictional data."
+	},
+	"evaluation": {
+		"title": "Intelligent Preventive Evaluation",
+		"protocol": "Protocol applied",
+		"healthScore": "Health Score",
+		"summary": "Your evaluation summary",
+		"recommendations": "Preventive recommendations"
+	},
+	"protocol": {
+		"empa": "EMPA — Adult Preventive Medicine Exam",
+		"empam": "EMPAM — Older Adult Preventive Medicine Exam"
+	},
+	"demoPreventIa": {
+		"badge": "Prevent IA · Intelligent Preventive Evaluation",
+		"loading": "Loading…",
+		"introEyebrow": "Intelligent Preventive Evaluation",
+		"introTitle": "Try your Intelligent Preventive Evaluation without an account",
+		"introBody": "Choose one of the example results or load your own exam value. Prevent IA will automatically determine the right protocol — you never choose it.",
+		"preloadedLabel": "Example results",
+		"customLabel": "Or load your own exam",
+		"customExamType": "Exam",
+		"customValue": "Value",
+		"customLoadButton": "Load exam",
+		"customLoaded": "Exam loaded",
+		"runButton": "Run Prevent IA",
+		"analyzingGreeting": "Hi. I'm Prevent IA.",
+		"wakingUp": "Prevent IA is waking up…",
+		"evaluationIntro": "I've reviewed the result you chose. Let's do a personalized Intelligent Preventive Evaluation — I'll ask you a few questions to determine the right protocol and calculate your Health Score.",
+		"continueButton": "Continue",
+		"consentAgeQuestion": "Do you authorize me to use your age for this demo analysis? I use it to automatically determine your preventive protocol.",
+		"accept": "Accept",
+		"cancel": "Cancel",
+		"provideAgeQuestion": "How old are you?",
+		"ageInputLabel": "Age",
+		"smokingQuestion": "Do you smoke?",
+		"yes": "Yes",
+		"no": "No",
+		"familyHistoryQuestion": "Is there a family history of cardiovascular disease or diabetes?",
+		"functionalAssessmentIntro": "As part of your Intelligent Preventive Evaluation for people 65 or older, I need to ask a few extra questions about your daily functioning.",
+		"functional": {
+			"walkingDifficulty": "Difficulty walking",
+			"recentFalls": "Recent falls",
+			"usesCane": "Uses a cane or other support",
+			"memoryConcerns": "Memory concerns or forgetfulness",
+			"basicActivitiesDifficulty": "Difficulty with basic activities (dressing, bathing, eating)",
+			"unintentionalWeightLoss": "Unintentional weight loss",
+			"polypharmacy": "Takes 5 or more medications (polypharmacy)",
+			"socialIsolation": "Social isolation",
+			"functionalDependence": "Functionally dependent on another person"
+		},
+		"thanksMessage": "Thank you. I now have enough information.",
+		"calculatingMessage": "I'm calculating your Preventive Status…",
+		"resultTitle": "Preventive Status",
+		"resultBrand": "HealthProof Prevent Score",
+		"protocolAppliedLabel": "Protocol applied",
+		"statusHealthy": "Status: Healthy",
+		"statusAlert": "Status: Preventive alert",
+		"resultNarrative": {
+			"bajo": "Healthy. No relevant changes requiring immediate attention.",
+			"moderado": "Healthy, but there's a risk worth keeping an eye on.",
+			"alto": "It's important to discuss these results with a health professional soon."
+		},
+		"viewClinicalDetail": "View clinical detail (for the doctor)",
+		"hideClinicalDetail": "Hide clinical detail",
+		"healthScoreModulesTitle": "Health Score breakdown",
+		"healthScoreModule": {
+			"laboratorio": "Laboratory",
+			"factoresRiesgo": "Risk factors",
+			"habitos": "Habits",
+			"conversacional": "Conversational information",
+			"evaluacionFuncional": "Functional assessment"
+		},
+		"recommendationsTitle": "These actions can improve your Score.",
+		"shareQuestion": "Would you like to share this demo analysis with a health professional?",
+		"shareYes": "Yes, share it",
+		"shareNo": "No, thanks",
+		"shareSelectTitle": "Choose who to share with",
+		"shareOptions": {
+			"cesfam": "CESFAM",
+			"hospital": "Hospital",
+			"clinica": "Clinic",
+			"medico": "Doctor"
+		},
+		"shareConfirmed": "Done. In a real product, your analysis would now be shared with {target}.",
+		"shareDeclined": "Understood. This demo analysis was not shared or saved.",
+		"restart": "Try another exam"
 	},
 	"shareModal": {
 		"title": "Share Results",
@@ -1720,6 +1814,9 @@
 		"insecureContext": "The scanner requires HTTPS. Use the text input below to paste the QR content.",
 		"scannerErrorLabel": "Scanner error:",
 		"retryCamera": "Retry camera permission"
+	},
+	"demoMode": {
+		"banner": "Demo Mode - Wallet disabled"
 	},
 	"privyError": {
 		"privyTitle": "Privy configuration required",

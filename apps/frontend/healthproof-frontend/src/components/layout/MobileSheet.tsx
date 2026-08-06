@@ -1,6 +1,5 @@
 "use client";
 
-import { usePrivy } from "@privy-io/react-auth";
 import type { LucideIcon } from "lucide-react";
 import {
   Building2,
@@ -23,6 +22,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef } from "react";
 import { sileo } from "sileo";
 import { clearDbUserCache, useDbUser } from "@/hooks/auth/useDbUser";
+import { useSafePrivy } from "@/hooks/auth/useSafePrivy";
 import { useWalletAddress } from "@/hooks/auth/useWalletAddress";
 import { useOnChainRole } from "@/hooks/healthcare-networks/useOnChainRole";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
@@ -54,7 +54,7 @@ export function MobileSheet() {
   const tSidebar = useTranslations("dashboard.sidebar");
   const router = useRouter();
   const pathname = usePathname();
-  const { ready, authenticated, logout } = usePrivy();
+  const { ready, authenticated, logout } = useSafePrivy();
   const sheetOpen = useUiStore((s) => s.mobileSheetOpen);
   const setSheetOpen = useUiStore((s) => s.setMobileSheetOpen);
   const locale = useLocale();
