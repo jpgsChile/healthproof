@@ -4,9 +4,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   type AnalyzeDocumentResponse,
   analyzeDocument,
-  type ScenarioKey,
 } from "@/actions/prevent-ia/analyze-document";
 import { isAuthSuccess } from "@/lib/auth/with-auth";
+import type { ScenarioKey } from "@/services/prevent-ia/scenarios";
 
 const CACHE_KEY = "hp_prevent_ia_analysis";
 const CACHE_ERROR_KEY = "hp_prevent_ia_analysis_error";

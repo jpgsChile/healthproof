@@ -21,7 +21,8 @@ import {
   calculateHealthScore,
   type ScoreTimelinePoint,
 } from "@/services/prevent-ia/health-score-engine";
-import mockScenarios from "@/services/prevent-ia/mock/mock-clinical-results.json";
+import type { ScenarioKey } from "@/services/prevent-ia/scenarios";
+import { SCENARIOS } from "@/services/prevent-ia/scenarios";
 import type {
   ClinicalResult,
   ClinicalTriggerPayload,
@@ -29,17 +30,7 @@ import type {
   PreventIaResult,
 } from "@/services/prevent-ia/types";
 
-export type ScenarioKey =
-  | "escenario_riesgo_bajo"
-  | "escenario_riesgo_en_ascenso"
-  | "escenario_riesgo_alto";
-
 const DEFAULT_SCENARIO: ScenarioKey = "escenario_riesgo_bajo";
-
-const SCENARIOS = mockScenarios as unknown as Record<
-  ScenarioKey,
-  ClinicalTriggerPayload
->;
 
 interface AnalyzeDocumentParams {
   scenario?: ScenarioKey;
@@ -54,16 +45,20 @@ export interface AnalyzeDocumentResponse {
   scoreTimeline: ScoreTimelinePoint[];
 }
 
-async function analyzeDocumentHandler(
-  data: AnalyzeDocumentParams,
-  _auth: AuthContext,
-): Promise<AnalyzeDocumentResponse> {
-  const scenarioKey =
-    data.scenario && SCENARIOS[data.scenario]
-      ? data.scenario
-      : DEFAULT_SCENARIO;
-  const payload = SCENARIOS[scenarioKey];
-
+/**
+ * Núcleo del caso de uso "analizar un resultado clínico": motor de reglas +
+ * agente. Extraído de `analyzeDocumentHandler` para que la demo pública
+ * (`analyze-document-demo.ts`) pueda ejecutar exactamente la misma lógica
+ * sobre un payload propio (custom o mock), sin duplicarla y sin pasar por
+ * `withAuth` — el contrato de `analyzeDocument` (el server action autenticado)
+ * no cambia.
+ */
+export async function runPreventIaAnalysis(
+  payload: ClinicalTriggerPayload,
+): Promise<{
+  result: PreventIaResult;
+  scoreTimeline: ScoreTimelinePoint[];
+}> {
   const breakdown = calculateHealthScore(
     payload.offchain,
     payload.historialPrevio,
@@ -74,6 +69,21 @@ async function analyzeDocumentHandler(
     payload.historialPrevio,
     payload.onchain.createdAt,
   );
+
+  return { result, scoreTimeline };
+}
+
+async function analyzeDocumentHandler(
+  data: AnalyzeDocumentParams,
+  _auth: AuthContext,
+): Promise<AnalyzeDocumentResponse> {
+  const scenarioKey =
+    data.scenario && SCENARIOS[data.scenario]
+      ? data.scenario
+      : DEFAULT_SCENARIO;
+  const payload = SCENARIOS[scenarioKey];
+
+  const { result, scoreTimeline } = await runPreventIaAnalysis(payload);
 
   return {
     scenario: scenarioKey,

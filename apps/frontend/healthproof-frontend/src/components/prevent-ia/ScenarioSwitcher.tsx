@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import type { ScenarioKey } from "@/actions/prevent-ia/analyze-document";
+import type { ScenarioKey } from "@/services/prevent-ia/scenarios";
 import { RISK_DOT_CLASS } from "./risk-styles";
 
 const SCENARIOS: {

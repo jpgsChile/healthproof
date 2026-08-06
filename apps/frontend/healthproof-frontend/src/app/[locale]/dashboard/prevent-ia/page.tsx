@@ -3,7 +3,6 @@
 import { HeartPulse } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import type { ScenarioKey } from "@/actions/prevent-ia/analyze-document";
 import { ClinicalSummaryPanel } from "@/components/prevent-ia/ClinicalSummaryPanel";
 import { DemoDataBanner } from "@/components/prevent-ia/DemoDataBanner";
 import { LongitudinalComparisonChart } from "@/components/prevent-ia/LongitudinalComparisonChart";
@@ -15,6 +14,7 @@ import { useWalletAddress } from "@/hooks/auth/useWalletAddress";
 import { useOnChainRole } from "@/hooks/healthcare-networks/useOnChainRole";
 import { usePatientRanking } from "@/hooks/prevent-ia/usePatientRanking";
 import { usePreventIaAnalysis } from "@/hooks/prevent-ia/usePreventIaAnalysis";
+import type { ScenarioKey } from "@/services/prevent-ia/scenarios";
 
 const DEFAULT_SCENARIO: ScenarioKey = "escenario_riesgo_bajo";
 const RANKING_ROLES = new Set(["doctor", "certifier"]);
