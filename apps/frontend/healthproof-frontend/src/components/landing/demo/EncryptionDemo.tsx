@@ -3,9 +3,11 @@
 import { Check, FileText, Loader2, Lock, Unlock } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
+import { useDemoPrimaryAction } from "./DemoPrimaryAction";
 import { MOCK_CLINICAL_TEXT_EN, MOCK_CLINICAL_TEXT_ES } from "./mock-data";
 
 interface EncryptionDemoProps {
+  onStart?: () => void;
   onEncrypted?: (iv: string, ciphertext: string) => void;
 }
 
@@ -18,7 +20,7 @@ function bufToBase64(buf: ArrayBuffer): string {
   return btoa(binary);
 }
 
-export function EncryptionDemo({ onEncrypted }: EncryptionDemoProps) {
+export function EncryptionDemo({ onStart, onEncrypted }: EncryptionDemoProps) {
   const t = useTranslations("demoFlow");
   const locale = useLocale();
   const plaintext =
@@ -28,6 +30,16 @@ export function EncryptionDemo({ onEncrypted }: EncryptionDemoProps) {
   const [ciphertextB64, setCiphertextB64] = useState("");
   const [ivB64, setIvB64] = useState("");
   const [decrypted, setDecrypted] = useState("");
+  const startEncryption = () => {
+    setStage("encrypting");
+    onStart?.();
+  };
+  const inHero = useDemoPrimaryAction({
+    label: t(stage === "encrypting" ? "encryptingFile" : "encryptFile"),
+    run: startEncryption,
+    busy: stage === "encrypting",
+    complete: stage === "done",
+  });
 
   useEffect(() => {
     if (stage !== "encrypting") return;
@@ -85,13 +97,15 @@ export function EncryptionDemo({ onEncrypted }: EncryptionDemoProps) {
         <p className="text-sm font-medium text-slate-700">
           {t("encryptFileName")}
         </p>
-        <button
-          type="button"
-          onClick={() => setStage("encrypting")}
-          className="rounded-xl bg-slate-800 px-4 py-2 text-sm font-medium text-white shadow-(--hp-shadow-raised) transition hover:bg-slate-700"
-        >
-          {t("encryptButton")}
-        </button>
+        {!inHero && (
+          <button
+            type="button"
+            onClick={startEncryption}
+            className="rounded-xl bg-slate-800 px-4 py-2 text-sm font-medium text-white shadow-(--hp-shadow-raised) transition hover:bg-slate-700"
+          >
+            {t("encryptButton")}
+          </button>
+        )}
       </div>
     );
   }

@@ -2,20 +2,43 @@
 
 import { Check, FileText, FlaskConical, Shield } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { BlockchainConfirmation } from "./BlockchainConfirmation";
+import { useDemoPrimaryAction } from "./DemoPrimaryAction";
+import type { DemoPhase } from "./hero-demo-flow";
 import { DEMO_PATIENTS } from "./mock-data";
 
 interface PatientSelectLabStepProps {
   onComplete: () => void;
+  onPhaseChange?: (phase: DemoPhase) => void;
+  isGranted?: boolean;
+  completed?: boolean;
 }
 
 export function PatientSelectLabStep({
   onComplete,
+  onPhaseChange,
+  isGranted = false,
+  completed = false,
 }: PatientSelectLabStepProps) {
   const t = useTranslations("demoFlow");
   const [selectedLab, setSelectedLab] = useState(0);
   const [confirmed, setConfirmed] = useState(false);
+  const [granted, setGranted] = useState(completed);
+  const authorize = () => {
+    setConfirmed(true);
+    onPhaseChange?.("permission-pending");
+  };
+  const inHero = useDemoPrimaryAction({
+    label: t(confirmed && !granted ? "authorizingLab" : "authorizeLab"),
+    run: authorize,
+    busy: confirmed && !granted,
+    complete: granted,
+  });
+  const finish = useCallback(() => {
+    setGranted(true);
+    onComplete();
+  }, [onComplete]);
 
   const labs = [
     { name: "Lab Central", location: "Santiago" },
@@ -26,11 +49,18 @@ export function PatientSelectLabStep({
   if (confirmed) {
     return (
       <div className="space-y-4">
-        <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50/60 px-4 py-3 text-sm text-emerald-700">
-          <Check className="h-4 w-4" />
-          {t("labAssigned")}: {labs[selectedLab].name}
+        <div
+          className={`flex items-center gap-2 rounded-xl border px-4 py-3 text-sm ${isGranted ? "border-emerald-200 bg-emerald-50/60 text-emerald-700" : "border-sky-200 bg-sky-50/60 text-sky-700"}`}
+        >
+          {isGranted ? (
+            <Check className="h-4 w-4" />
+          ) : (
+            <Shield className="h-4 w-4" />
+          )}
+          {t(isGranted ? "labAssigned" : "permissionPending")}:{" "}
+          {labs[selectedLab].name}
         </div>
-        <BlockchainConfirmation action="patient" onComplete={onComplete} />
+        <BlockchainConfirmation action="patient" onComplete={finish} />
       </div>
     );
   }
@@ -64,7 +94,10 @@ export function PatientSelectLabStep({
         {labs.map((lab, i) => (
           <button
             key={lab.name}
-            onClick={() => setSelectedLab(i)}
+            onClick={() => {
+              setSelectedLab(i);
+              setGranted(false);
+            }}
             className={`flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left transition ${
               selectedLab === i
                 ? "border-emerald-300 bg-emerald-50 shadow-(--hp-shadow-raised)"
@@ -83,13 +116,15 @@ export function PatientSelectLabStep({
         ))}
       </div>
 
-      <button
-        type="button"
-        onClick={() => setConfirmed(true)}
-        className="w-full rounded-xl bg-slate-800 py-2.5 text-sm font-medium text-white shadow-(--hp-shadow-raised) transition hover:bg-slate-700"
-      >
-        {t("assignLab")}
-      </button>
+      {!inHero && (
+        <button
+          type="button"
+          onClick={authorize}
+          className="w-full rounded-xl bg-slate-800 py-2.5 text-sm font-medium text-white shadow-(--hp-shadow-raised) transition hover:bg-slate-700"
+        >
+          {t("assignLab")}
+        </button>
+      )}
     </div>
   );
 }

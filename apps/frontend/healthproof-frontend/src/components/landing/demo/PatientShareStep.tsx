@@ -2,25 +2,42 @@
 
 import { Check, Eye, FileText, Share2, Shield, User } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useDemoPrimaryAction } from "./DemoPrimaryAction";
+import type { DemoPhase } from "./hero-demo-flow";
 import { MOCK_CLINICAL_TEXT_EN, MOCK_CLINICAL_TEXT_ES } from "./mock-data";
 
 interface PatientShareStepProps {
   onComplete: () => void;
+  onPhaseChange?: (phase: DemoPhase) => void;
+  completed?: boolean;
 }
 
-export function PatientShareStep({ onComplete }: PatientShareStepProps) {
+export function PatientShareStep({
+  onComplete,
+  onPhaseChange,
+  completed = false,
+}: PatientShareStepProps) {
   const t = useTranslations("demoFlow");
   const locale = useLocale();
   const plaintext =
     locale === "es" ? MOCK_CLINICAL_TEXT_ES : MOCK_CLINICAL_TEXT_EN;
 
-  const [viewed, setViewed] = useState(false);
-  const [shared, setShared] = useState(false);
-
-  useEffect(() => {
-    if (shared) onComplete();
-  }, [shared, onComplete]);
+  const [viewed, setViewed] = useState(completed);
+  const [shared, setShared] = useState(completed);
+  const view = () => {
+    setViewed(true);
+    onPhaseChange?.("result-viewed");
+  };
+  const share = () => {
+    setShared(true);
+    onComplete();
+  };
+  const inHero = useDemoPrimaryAction({
+    label: t(viewed ? "shareAction" : "viewResult"),
+    run: viewed ? share : view,
+    complete: shared,
+  });
 
   const doctors = [
     { name: "Dr. Pérez", specialty: t("specialtyCardiology") },
@@ -50,14 +67,16 @@ export function PatientShareStep({ onComplete }: PatientShareStepProps) {
       </div>
 
       {!viewed ? (
-        <button
-          type="button"
-          onClick={() => setViewed(true)}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-sky-50 py-2.5 text-sm font-medium text-sky-700 transition hover:bg-sky-100"
-        >
-          <Eye className="h-4 w-4" />
-          {t("viewResult")}
-        </button>
+        !inHero && (
+          <button
+            type="button"
+            onClick={view}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-sky-50 py-2.5 text-sm font-medium text-sky-700 transition hover:bg-sky-100"
+          >
+            <Eye className="h-4 w-4" />
+            {t("viewResult")}
+          </button>
+        )
       ) : (
         <div className="space-y-3">
           <div className="rounded-2xl border border-emerald-100 bg-emerald-50/40 p-4">
@@ -99,14 +118,16 @@ export function PatientShareStep({ onComplete }: PatientShareStepProps) {
                   </div>
                 </button>
               ))}
-              <button
-                type="button"
-                onClick={() => setShared(true)}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-800 py-2.5 text-sm font-medium text-white shadow-(--hp-shadow-raised) transition hover:bg-slate-700"
-              >
-                <Share2 className="h-4 w-4" />
-                {t("shareAction")}
-              </button>
+              {!inHero && (
+                <button
+                  type="button"
+                  onClick={share}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-800 py-2.5 text-sm font-medium text-white shadow-(--hp-shadow-raised) transition hover:bg-slate-700"
+                >
+                  <Share2 className="h-4 w-4" />
+                  {t("shareAction")}
+                </button>
+              )}
             </div>
           ) : (
             <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50/60 px-4 py-3 text-sm text-emerald-700">

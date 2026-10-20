@@ -5,7 +5,7 @@ import { Component, type ReactNode } from "react";
 
 interface ErrorBoundaryMessages {
   privyTitle: string;
-  privyDesc: string;
+  privyDesc: (origin: string) => ReactNode;
   privyStepsTitle: string;
   step1: string;
   step2: string;
@@ -58,13 +58,7 @@ class PrivyErrorBoundaryClass extends Component<Props, State> {
             <h1 className="mb-4 text-xl font-bold text-slate-800">
               {m.privyTitle}
             </h1>
-            <p className="mb-6 text-sm text-slate-600">
-              {m.privyDesc.split("{{origin}}")[0]}
-              <code className="rounded bg-slate-100 px-1 py-0.5 font-mono text-xs">
-                {origin}
-              </code>
-              {m.privyDesc.split("{{origin}}")[1] ?? ""}
-            </p>
+            <p className="mb-6 text-sm text-slate-600">{m.privyDesc(origin)}</p>
             <div className="rounded-xl bg-sky-50 p-4 text-left text-xs text-sky-800">
               <p className="mb-2 font-semibold">{m.privyStepsTitle}</p>
               <ol className="ml-4 list-decimal space-y-1">
@@ -100,7 +94,15 @@ export function PrivyErrorBoundary({ children }: { children: ReactNode }) {
   const t = useTranslations("privyError");
   const messages: ErrorBoundaryMessages = {
     privyTitle: t("privyTitle"),
-    privyDesc: t("privyDesc"),
+    privyDesc: (origin) =>
+      t.rich("privyDesc", {
+        origin,
+        code: (chunks) => (
+          <code className="rounded bg-slate-100 px-1 py-0.5 font-mono text-xs">
+            {chunks}
+          </code>
+        ),
+      }),
     privyStepsTitle: t("privyStepsTitle"),
     step1: t("step1"),
     step2: t("step2"),

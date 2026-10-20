@@ -3,17 +3,26 @@
 interface StepIndicatorProps {
   current: number;
   labels: string[];
+  completed?: readonly boolean[];
 }
 
-export function StepIndicator({ current, labels }: StepIndicatorProps) {
+export function StepIndicator({
+  current,
+  labels,
+  completed,
+}: StepIndicatorProps) {
   return (
-    <div className="flex items-center gap-2 px-6 pt-4">
+    <div className="grid grid-cols-5 items-start gap-1 px-4 pt-4">
       {labels.map((label, i) => {
         const isActive = i === current;
-        const isDone = i < current;
+        const isDone = completed ? completed[i] : i < current;
         return (
-          <div key={label} className="flex flex-1 items-center gap-2">
-            <div className="flex flex-col items-center gap-1">
+          <div
+            key={label}
+            className="min-w-0"
+            aria-current={isActive ? "step" : undefined}
+          >
+            <div className="flex min-w-0 flex-col items-center gap-1">
               <div
                 className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-colors ${
                   isDone
@@ -43,18 +52,11 @@ export function StepIndicator({ current, labels }: StepIndicatorProps) {
                 )}
               </div>
               <span
-                className={`text-[10px] font-medium ${isActive ? "text-sky-600" : "text-slate-400"}`}
+                className={`max-w-full text-center text-[10px] font-medium ${isActive ? "text-sky-600" : "text-slate-400"}`}
               >
                 {label}
               </span>
             </div>
-            {i < labels.length - 1 && (
-              <div
-                className={`h-0.5 flex-1 rounded-full ${
-                  i < current ? "bg-emerald-400" : "bg-slate-200"
-                }`}
-              />
-            )}
           </div>
         );
       })}

@@ -1,128 +1,255 @@
 import gsap from "gsap";
 import { type RefObject, useLayoutEffect } from "react";
+import {
+  DOCUMENT_ORIGIN,
+  EXCHANGE_DURATION,
+  type ExchangeRoute,
+  getExchangeFrame,
+  getLaboratoryFrame,
+  project,
+} from "@/components/landing/anatomy/exchange";
+import {
+  getHeroFeedback,
+  getHeroScene,
+  type HeroDemoState,
+} from "@/components/landing/demo/hero-demo-flow";
 
-const PATH_IDS = ["path-mc-lab", "path-lab-pat", "path-pat-mc"] as const;
-const SVG_W = 1000;
-const SVG_H = 600;
-const SAMPLES_PER_SEGMENT = 80;
+const PRESS_STROKE = project([0, 0, -11.8])[1] - project([0, 0, 0])[1];
+const GATE_STROKE = project([0, 0, 14])[1] - project([0, 0, 0])[1];
+const OUTCOMES = {
+  order: "[data-machine-order-received]",
+  assignment: "[data-machine-granted-access]",
+  result: "[data-machine-result]",
+  sharing: "[data-machine-shared-access]",
+};
 
-function samplePath(pathEl: SVGPathElement, count: number) {
-  const len = pathEl.getTotalLength();
-  const points: Array<{ xPct: number; yPct: number }> = [];
-  for (let i = 0; i < count; i++) {
-    const pt = pathEl.getPointAtLength((i / count) * len);
-    points.push({ xPct: (pt.x / SVG_W) * 100, yPct: (pt.y / SVG_H) * 100 });
-  }
-  return points;
-}
-
-function buildClosedLoop(pathEl: SVGPathElement, count: number) {
-  const forward = samplePath(pathEl, count);
-  const backward = [...forward].reverse();
-  return [...forward, ...backward];
-}
-
-function lerp(points: Array<{ xPct: number; yPct: number }>, t: number) {
-  const total = points.length;
-  const raw = t * total;
-  const idx = Math.floor(raw) % total;
-  const next = (idx + 1) % total;
-  const frac = raw - Math.floor(raw);
-  return {
-    x: points[idx].xPct + (points[next].xPct - points[idx].xPct) * frac,
-    y: points[idx].yPct + (points[next].yPct - points[idx].yPct) * frac,
-  };
-}
-
+/** Motion illustrates events; semantic history survives interruptions and reduced motion. */
 export function useHeroPathAnimation(
-  sectionRef: RefObject<HTMLElement | null>,
-  iconRefs: RefObject<Array<HTMLDivElement | null>>,
-  imgRefs: RefObject<Array<HTMLImageElement | null>>,
-  pathStates: Record<string, boolean>,
-  preAssets: string[],
-  postAssets: string[],
+  sceneRef: RefObject<HTMLDivElement | null>,
+  state: HeroDemoState,
+  routes: readonly ExchangeRoute[],
 ) {
-  // biome-ignore lint/correctness/useExhaustiveDependencies: refs are stable
+  const { isOpen, phase } = state;
+  const activeRoute = getHeroScene(state).route;
+  const { permissionGranted } = getHeroFeedback(state);
+
   useLayoutEffect(() => {
-    const section = sectionRef.current;
-    if (!section) return;
-
-    const icons = iconRefs.current.filter(Boolean) as HTMLDivElement[];
-    if (icons.length === 0) return;
-
-    const pathEls = PATH_IDS.map((id) =>
-      section.querySelector<SVGPathElement>(`#${id}`),
-    ).filter(Boolean) as SVGPathElement[];
-
-    if (pathEls.length === 0) return;
-
-    const pathLoops = pathEls.map((el) =>
-      buildClosedLoop(el, SAMPLES_PER_SEGMENT),
-    );
-    const iconsPerPath = Math.ceil(icons.length / PATH_IDS.length);
-
-    const ctx = gsap.context(() => {
-      const loopDuration = 10;
-
-      icons.forEach((icon, index) => {
-        const pathIndex = Math.min(
-          Math.floor(index / iconsPerPath),
-          PATH_IDS.length - 1,
+    const scene = sceneRef.current;
+    if (!scene) return;
+    const media = gsap.matchMedia();
+    media.add(
+      {
+        motion: "(prefers-reduced-motion: no-preference)",
+        still: "(prefers-reduced-motion: reduce)",
+      },
+      (context) => {
+        const press = scene.querySelector<SVGGElement>("[data-machine-press]");
+        const intake = scene.querySelector<SVGGElement>(
+          "[data-machine-intake]",
         );
-        const pathLoop = pathLoops[pathIndex];
-        const progress = {
-          value: (index % iconsPerPath) / (iconsPerPath || 1),
-        };
-
-        gsap.set(icon, {
-          autoAlpha: 0.85,
-          xPercent: -50,
-          yPercent: -50,
+        const stationary = scene.querySelector(
+          "[data-machine-stationary-document]",
+        );
+        const labFile = scene.querySelector("[data-machine-lab-file]");
+        const gatePosition = (amount: number) => ({
+          attr: { transform: `translate(0 ${amount * GATE_STROKE})` },
         });
+        const position = (target: Element, point: number[], opacity: number) =>
+          gsap.set(target, {
+            autoAlpha: opacity,
+            attr: {
+              transform: `translate(${point[0] - DOCUMENT_ORIGIN[0]} ${point[1] - DOCUMENT_ORIGIN[1]})`,
+            },
+          });
 
-        const update = () => {
-          const t = progress.value % 1;
-          const { x, y } = lerp(pathLoop, t);
-          gsap.set(icon, { left: `${x}%`, top: `${y}%` });
-        };
-
-        update();
-
-        gsap.to(progress, {
-          value: progress.value + 1,
-          duration: loopDuration,
-          ease: "none",
-          repeat: -1,
-          onUpdate: update,
+        gsap.set(scene.querySelectorAll("[data-hero-parcel]"), {
+          autoAlpha: 0,
         });
-      });
-    }, section);
+        const parked = scene.querySelectorAll("[data-machine-parked]");
+        if (parked.length) gsap.set(parked, { autoAlpha: 1 });
+        if (intake) gsap.set(intake, { autoAlpha: 0 });
+        if (stationary) gsap.set(stationary, { autoAlpha: 1 });
+        if (press) gsap.set(press, { attr: { transform: "translate(0 0)" } });
+        for (const shutter of scene.querySelectorAll<SVGGElement>(
+          "[data-machine-shutter]",
+        )) {
+          gsap.set(
+            shutter,
+            gatePosition(
+              shutter.dataset.machineShutter === "laboratory" &&
+                permissionGranted
+                ? 1
+                : 0,
+            ),
+          );
+        }
+        for (const route of routes) {
+          const trace = scene.querySelector(`[data-hero-route="${route.id}"]`);
+          if (trace)
+            gsap.set(trace, {
+              opacity: activeRoute === route.id ? 0.85 : 0.12,
+            });
+        }
+        // Static semantic outcomes are already rendered. Do not replace them with a blank scene.
+        if (context.conditions?.still) return;
 
-    return () => ctx.revert();
-  }, []);
+        const timeline = gsap.timeline({
+          repeat: isOpen ? 0 : -1,
+          repeatDelay: isOpen ? 0 : 1.2,
+        });
+        const selected = isOpen
+          ? routes.filter((route) => route.id === activeRoute)
+          : routes;
+        for (const route of selected) {
+          const carrier = scene.querySelector<SVGGElement>(
+            `[data-hero-parcel="${route.id}"]`,
+          );
+          if (!carrier) continue;
+          const path = scene.querySelector(`[data-hero-route="${route.id}"]`);
+          const source = scene.querySelector(
+            `[data-machine-shutter="${route.from}"]`,
+          );
+          const receiver = scene.querySelector(
+            `[data-machine-shutter="${route.to}"]`,
+          );
+          const outcome = scene.querySelector(OUTCOMES[route.id]);
+          const plain = carrier.querySelector("[data-document-plain]");
+          const seal = carrier.querySelector("[data-document-seal]");
+          // In guided mode the result is already in the encryption chamber.
+          const start = isOpen && route.id === "result" ? 1.55 : 0;
+          const clock = { time: start };
+          if (outcome) timeline.set(outcome, { autoAlpha: 0 });
+          const render = () => {
+            const frame = getExchangeFrame(route, clock.time);
+            scene.dataset.machineStage = frame.stage;
+            scene.dataset.movingRoute = route.id;
+            position(carrier, frame.position, frame.opacity);
+            if (plain) gsap.set(plain, { opacity: 1 - frame.sealOpacity });
+            if (seal) gsap.set(seal, { opacity: frame.sealOpacity });
+            if (source)
+              gsap.set(
+                source,
+                gatePosition(
+                  Math.max(
+                    route.from === "laboratory" && permissionGranted ? 1 : 0,
+                    frame.sourceOpen,
+                  ),
+                ),
+              );
+            if (receiver)
+              gsap.set(
+                receiver,
+                gatePosition(
+                  route.id === "assignment"
+                    ? frame.receiverOpen
+                    : Math.max(
+                        route.to === "laboratory" && permissionGranted ? 1 : 0,
+                        frame.receiverOpen,
+                      ),
+                ),
+              );
+          };
+          if (path) timeline.to(path, { opacity: 0.85, duration: 0.25 });
+          timeline.call(render);
+          timeline.to(clock, {
+            time: EXCHANGE_DURATION,
+            duration: EXCHANGE_DURATION - start,
+            ease: "none",
+            onUpdate: render,
+          });
+          if (outcome) timeline.set(outcome, { autoAlpha: 1 });
+          if (source)
+            timeline.set(
+              source,
+              gatePosition(
+                route.from === "laboratory" && permissionGranted ? 1 : 0,
+              ),
+            );
+          if (receiver)
+            timeline.to(receiver, {
+              ...gatePosition(
+                route.to === "laboratory" && permissionGranted ? 1 : 0,
+              ),
+              duration: 0.35,
+              ease: "sine.inOut",
+            });
+          if (path && !isOpen)
+            timeline.to(path, { opacity: 0.12, duration: 0.3 });
+          timeline.to({}, { duration: 0.45 });
+        }
 
-  // Update image assets when path states change without restarting motion
-  // biome-ignore lint/correctness/useExhaustiveDependencies: imgRefs is a stable ref
-  useLayoutEffect(() => {
-    const imgs = imgRefs.current.filter(Boolean) as HTMLImageElement[];
-    if (imgs.length === 0) return;
+        if (
+          isOpen &&
+          (phase === "file-received" || phase === "encrypting") &&
+          intake
+        ) {
+          const processing = phase === "encrypting";
+          const clock = { progress: 0 };
+          if (labFile) gsap.set(labFile, { autoAlpha: 0 });
+          if (processing && stationary) gsap.set(stationary, { autoAlpha: 0 });
+          timeline.to(clock, {
+            progress: 1,
+            duration: processing ? 0.4 : 0.85,
+            ease: "none",
+            onUpdate: () => {
+              const frame = getLaboratoryFrame(clock.progress, processing);
+              scene.dataset.machineStage = processing
+                ? "encrypting"
+                : "file-intake";
+              position(intake, frame.position, frame.opacity);
+            },
+          });
+          timeline.set(intake, { autoAlpha: 0 });
+          if (processing && stationary)
+            timeline.set(stationary, { autoAlpha: 1 });
+          if (!processing && labFile) timeline.set(labFile, { autoAlpha: 1 });
+          if (processing && press) {
+            const stroke = { amount: 0 };
+            timeline.to(stroke, {
+              amount: 1,
+              duration: 0.35,
+              yoyo: true,
+              repeat: -1,
+              ease: "sine.inOut",
+              onUpdate: () =>
+                gsap.set(press, {
+                  attr: {
+                    transform: `translate(0 ${stroke.amount * PRESS_STROKE})`,
+                  },
+                }),
+            });
+          }
+        }
+        const request = scene.querySelector(
+          "[data-machine-permission-request]",
+        );
+        if (isOpen && phase === "permission-pending" && request)
+          timeline.to(request, {
+            opacity: 0.55,
+            duration: 0.6,
+            yoyo: true,
+            repeat: -1,
+            ease: "sine.inOut",
+          });
 
-    const iconsPerPath = Math.ceil(imgs.length / PATH_IDS.length);
-
-    imgs.forEach((img, i) => {
-      const pathIndex = Math.min(
-        Math.floor(i / iconsPerPath),
-        PATH_IDS.length - 1,
-      );
-      const pathId = PATH_IDS[pathIndex];
-      const isVerified = pathStates[pathId] ?? false;
-      const assets = isVerified ? postAssets : preAssets;
-      const src = assets[i % assets.length];
-      if (img.getAttribute("src") !== src) {
-        img.setAttribute("src", src);
-        img.setAttribute("width", isVerified ? "38" : "30");
-        img.setAttribute("height", isVerified ? "38" : "30");
-      }
-    });
-  }, [pathStates, preAssets, postAssets]);
+        let inView = true;
+        const syncPlayback = () => timeline.paused(!inView || document.hidden);
+        const observer = new IntersectionObserver(([entry]) => {
+          inView = entry.isIntersecting;
+          syncPlayback();
+        });
+        observer.observe(scene);
+        document.addEventListener("visibilitychange", syncPlayback);
+        syncPlayback();
+        return () => {
+          observer.disconnect();
+          document.removeEventListener("visibilitychange", syncPlayback);
+          delete scene.dataset.machineStage;
+          delete scene.dataset.movingRoute;
+        };
+      },
+      scene,
+    );
+    return () => media.revert();
+  }, [sceneRef, routes, isOpen, activeRoute, phase, permissionGranted]);
 }

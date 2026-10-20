@@ -2,20 +2,64 @@
 
 import { Check, FileText, FlaskConical, Lock, Upload } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { BlockchainConfirmation } from "./BlockchainConfirmation";
+import { useDemoPrimaryAction } from "./DemoPrimaryAction";
 import { EncryptionDemo } from "./EncryptionDemo";
+import type { DemoPhase } from "./hero-demo-flow";
 import { DEMO_PATIENTS } from "./mock-data";
 
 interface LabUploadStepProps {
   onComplete: () => void;
+  onPhaseChange?: (phase: DemoPhase) => void;
+  completed?: boolean;
 }
 
-export function LabUploadStep({ onComplete }: LabUploadStepProps) {
+export function LabUploadStep({
+  onComplete,
+  onPhaseChange,
+  completed = false,
+}: LabUploadStepProps) {
   const t = useTranslations("demoFlow");
   const [stage, setStage] = useState<
     "orders" | "upload" | "encrypt" | "confirm" | "done"
   >("orders");
+  const [finished, setFinished] = useState(completed);
+  const prepare = () => {
+    setFinished(false);
+    setStage("upload");
+    onPhaseChange?.("file-selected");
+  };
+  const upload = () => {
+    setStage("encrypt");
+    onPhaseChange?.("file-received");
+  };
+  const finish = useCallback(() => {
+    setFinished(true);
+    onComplete();
+  }, [onComplete]);
+  const inHero = useDemoPrimaryAction(
+    {
+      label: t(
+        stage === "orders"
+          ? "prepareUpload"
+          : stage === "confirm"
+            ? "confirmingDemo"
+            : "uploadAction",
+      ),
+      run: stage === "orders" ? prepare : upload,
+      busy: stage === "confirm" && !finished,
+      complete: finished,
+    },
+    stage !== "encrypt",
+  );
+  const handleEncrypted = useCallback(() => {
+    setStage("confirm");
+    onPhaseChange?.("encrypted");
+  }, [onPhaseChange]);
+  const handleEncryptionStart = useCallback(() => {
+    onPhaseChange?.("encrypting");
+  }, [onPhaseChange]);
 
   if (stage === "orders") {
     return (
@@ -31,7 +75,7 @@ export function LabUploadStep({ onComplete }: LabUploadStepProps) {
           </p>
           <button
             type="button"
-            onClick={() => setStage("upload")}
+            onClick={prepare}
             className="flex w-full items-center gap-3 rounded-2xl border border-(--hp-border) bg-(--hp-layer) px-4 py-3 text-left transition hover:bg-white hover:shadow-(--hp-shadow-raised)"
           >
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-sky-100">
@@ -62,13 +106,15 @@ export function LabUploadStep({ onComplete }: LabUploadStepProps) {
           </p>
           <p className="text-xs text-slate-400">result_cbc.pdf · 1.2 MB</p>
         </div>
-        <button
-          type="button"
-          onClick={() => setStage("encrypt")}
-          className="w-full rounded-xl bg-slate-800 py-2.5 text-sm font-medium text-white shadow-(--hp-shadow-raised) transition hover:bg-slate-700"
-        >
-          {t("uploadAction")}
-        </button>
+        {!inHero && (
+          <button
+            type="button"
+            onClick={upload}
+            className="w-full rounded-xl bg-slate-800 py-2.5 text-sm font-medium text-white shadow-(--hp-shadow-raised) transition hover:bg-slate-700"
+          >
+            {t("uploadAction")}
+          </button>
+        )}
       </div>
     );
   }
@@ -77,7 +123,10 @@ export function LabUploadStep({ onComplete }: LabUploadStepProps) {
     return (
       <div className="space-y-4">
         <p className="text-sm text-slate-600">{t("labEncryptDesc")}</p>
-        <EncryptionDemo onEncrypted={() => setStage("confirm")} />
+        <EncryptionDemo
+          onStart={handleEncryptionStart}
+          onEncrypted={handleEncrypted}
+        />
       </div>
     );
   }
@@ -89,7 +138,7 @@ export function LabUploadStep({ onComplete }: LabUploadStepProps) {
           <Lock className="h-4 w-4" />
           {t("encryptedReady")}
         </div>
-        <BlockchainConfirmation action="lab" onComplete={onComplete} />
+        <BlockchainConfirmation action="lab" onComplete={finish} />
       </div>
     );
   }

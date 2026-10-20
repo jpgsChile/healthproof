@@ -3,19 +3,36 @@
 import { FileText, Stethoscope, User } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { useDemoPrimaryAction } from "./DemoPrimaryAction";
+import type { DemoPhase } from "./hero-demo-flow";
 import { DEMO_PATIENTS } from "./mock-data";
 
 interface DoctorOrderStepProps {
   onComplete: () => void;
+  completed?: boolean;
+  onPhaseChange?: (phase: DemoPhase) => void;
 }
 
-export function DoctorOrderStep({ onComplete }: DoctorOrderStepProps) {
+export function DoctorOrderStep({
+  onComplete,
+  completed = false,
+  onPhaseChange,
+}: DoctorOrderStepProps) {
   const t = useTranslations("demoFlow");
   const [selectedPatient, setSelectedPatient] = useState(0);
-  const [confirmed, setConfirmed] = useState(false);
+  const [confirmed, setConfirmed] = useState(completed);
 
   const examTypes = [t("examCBC"), t("examRadiography"), t("examECG")];
   const [selectedExam, setSelectedExam] = useState(0);
+  const createOrder = () => {
+    setConfirmed(true);
+    onComplete();
+  };
+  const inHero = useDemoPrimaryAction({
+    label: t("createOrder"),
+    run: createOrder,
+    complete: confirmed,
+  });
 
   return (
     <div className="space-y-4">
@@ -36,6 +53,7 @@ export function DoctorOrderStep({ onComplete }: DoctorOrderStepProps) {
             onClick={() => {
               setSelectedPatient(i);
               setConfirmed(false);
+              onPhaseChange?.("order");
             }}
             className={`flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left transition ${
               selectedPatient === i
@@ -66,6 +84,7 @@ export function DoctorOrderStep({ onComplete }: DoctorOrderStepProps) {
               onClick={() => {
                 setSelectedExam(i);
                 setConfirmed(false);
+                onPhaseChange?.("order");
               }}
               className={`rounded-xl border px-2 py-2 text-center text-xs font-medium transition ${
                 selectedExam === i
@@ -93,16 +112,15 @@ export function DoctorOrderStep({ onComplete }: DoctorOrderStepProps) {
       </div>
 
       {!confirmed ? (
-        <button
-          type="button"
-          onClick={() => {
-            setConfirmed(true);
-            onComplete();
-          }}
-          className="w-full rounded-xl bg-slate-800 py-2.5 text-sm font-medium text-white shadow-(--hp-shadow-raised) transition hover:bg-slate-700"
-        >
-          {t("createOrder")}
-        </button>
+        !inHero && (
+          <button
+            type="button"
+            onClick={createOrder}
+            className="w-full rounded-xl bg-slate-800 py-2.5 text-sm font-medium text-white shadow-(--hp-shadow-raised) transition hover:bg-slate-700"
+          >
+            {t("createOrder")}
+          </button>
+        )
       ) : (
         <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50/60 px-4 py-2.5 text-sm text-emerald-700">
           <svg
